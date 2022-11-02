@@ -22,12 +22,16 @@ on:
         type: choice
         description: Choose your resource
         options: 
+        - Cloudwatch
+        - DeploymentGroup
         - ECR
         - EC2
+        - EC2_ASG
         - EFS
         - KMS
         - RDS
         - S3
+        - SM
         - SNS
         
       region:
@@ -73,7 +77,7 @@ jobs:
       with:
          name: ${{ inputs.name }}
          template: ${{inputs.resource}}/resource.yml
-         parameter-overrides: file://${{ github.workspace }}/${{inputs.resource}}/env_params/${{inputs.environment}}.json
+         parameter-overrides: file://${{ github.workspace }}/${{inputs.resource}}/env_params/${{inputs.environment}}.yml
 #       env: 
 #         Json_variable: ${{ github.workspace }}/${{inputs.resource}}/env_params/${{inputs.environment}}.json
        
