@@ -1,0 +1,129 @@
+
+name: 'CFT'
+on:
+  workflow_dispatch:
+    inputs:
+     
+      choice:
+        type: choice
+        description: Action
+        options: 
+        - CreateStack
+        - DeleteStack
+      environment:
+        type: choice
+        description: Environment
+        options: 
+        - devl
+        - qual
+        - cert
+        - prod
+      resource:
+        type: choice
+        description: Choose your resource
+        options: 
+        - ECR
+        - EC2
+        - EFS
+        - KMS
+        - RDS
+        - S3
+        - SNS
+        
+      region:
+        description: The region to deploy ECR to
+#         required: true
+        default: us-west-2
+      name:
+        type: string
+        description: Enter Stackname
+
+
+jobs:
+  CreateStack:
+    if: ${{ inputs.choice == 'CreateStack' }}
+    name: 'CFT'
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ${{inputs.resource}}
+    steps:
+    - name: Code Checkout
+      uses: actions/checkout@v3
+      
+    - name: AWS CLI
+      id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@master
+    - run: aws --version
+      shell: bash
+      
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::847370586410:role/JD-AppModernization-SME-Role
+        role-session-name: GitHubActions
+        role-duration-seconds: 1200
+        role-skip-session-tagging: true
+        aws-region: us-west-2
+    
+       
+      
+    - name: 'Create/Update Stack'
+      uses: aws-actions/aws-cloudformation-github-deploy@v1.0.4
+      with:
+         name: ${{ inputs.name }}
+         template: ${{inputs.resource}}/resource.yml
+         parameter-overrides: file://${{ github.workspace }}/${{inputs.resource}}/env_params/${{inputs.environment}}.json
+#       env: 
+#         Json_variable: ${{ github.workspace }}/${{inputs.resource}}/env_params/${{inputs.environment}}.json
+       
+        
+
+      timeout-minutes: 15
+
+#          parameter-overrides: ${{inputs.resource}}/env_params/${{inputs.environment}}.json
+
+
+#        parameter-overrides: "TopicName=AppModernizationSNS, EndPoint=aarav.bairagi@yash.com, DisplayName=AppModernizationSNS Notification, Name=AppModernizationSNS, component=JD-SME"
+#        PLAN_NAME: env_params/${{ inputs.environment }}.yml       
+       
+  DeleteStack:
+    if: ${{ inputs.choice == 'DeleteStack' }}
+    name: DeleteStack
+    runs-on: self-hosted
+    steps: 
+    - name: Code Checkout
+      uses: actions/checkout@v3
+      
+    - name: AWS CLI
+      id: install-aws-cli
+      uses: unfor19/install-aws-cli-action@master
+    - run: aws --version
+      shell: bash
+      
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::847370586410:role/JD-AppModernization-SME-Role
+        role-session-name: GitHubActions
+        role-duration-seconds: 1200
+        role-skip-session-tagging: true
+        aws-region: us-west-2
+      
+    - run: aws cloudformation delete-stack --stack-name ${{ inputs.name }}
+      shell: bash
+      
+#     - name: 'Delete Stack: ECRStack'
+#       uses: aws-actions/aws-cloudformation-github-deploy@v1
+#       with:
+#        name: ECRStack
+#        template: ${{inputs.resource}}resource.yml
+#        no-fail-on-empty-changeset: "1"
+#       env:
+#           PLAN_NAME: ${{inputs.resource}}/env_params/${{ inputs.environment }}.yml
+#           run: aws cloudformation delete-stack --stack-name ECRStack
+    outputs:
+          regionName: 'us-west-2'
+          stackName: ${{ inputs.name }}
+
+
