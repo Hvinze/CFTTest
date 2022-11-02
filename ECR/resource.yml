@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  RepositoryName:
+    Description: Must be lower case, as it is used as part of the repository name
+    Type: String
+
+  ImageTagMutability:
+    Description: The tag mutability setting for the repository
+    Type: String    
+    AllowedValues:
+      - IMMUTABLE
+      - MUTABLE        
+
+  ScanOnPush:
+    Description: The setting that determines whether images are scanned after being pushed to a repository
+    Type: String
+    AllowedValues:
+      - true
+      - false
+
+  Name:
+    Description: Tag used for Naming
+    Type: String
+
+  component:
+    Description: Tag used for Billing and tracking purposes
+    Type: String
+      
+Resources:
+  AppModernizationECR:
+    Type: AWS::ECR::Repository
+    Properties:
+
+      RepositoryName: !Ref RepositoryName
+      RepositoryPolicyText: 
+        Version: "2012-10-17"
+        Statement: 
+            Sid: ECRAllowPushPull
+            Effect: Allow
+            Principal: 
+              AWS: 
+                - "arn:aws:iam::447509417119:user/Aarav"
+            Action:
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:BatchGetImage"
+              - "ecr:CompleteLayerUpload"
+              - "ecr:DeleteLifecyclePolicy"
+              - "ecr:DescribeRepositories"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:ListImages"
+              - "ecr:ListTagsForResource"
+              - "ecr:PutImage"
+              - "ecr:SetRepositoryPolicy"
+              - "ecr:UploadLayerPart"
+              - "ecr:DescribeImages"
+              - "ecr:GetLifecyclePolicy"
+              - "ecr:TagResource"
+              - "ecr:CreateRepository"
+              - "ecr:DeleteRepository"
+              - "ecr:PutRegistryPolicy"
+              - "ecr:PutLifecyclePolicy"
+              - "ecr:DescribeRegistry"
+              - "ecr:DescribeRepositories"
+              - "ecr:GetRegistryPolicy"
+              - "ecr:DescribePullThroughCacheRules"
+              - "ecr:GetRegistryScanningConfiguration"
+              - "ecr:DeleteRegistryPolicy"
+      ImageScanningConfiguration: 
+        ScanOnPush: !Ref ScanOnPush
+      ImageTagMutability: !Ref ImageTagMutability
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+                {
+                    "rulePriority": 1,
+                    "description": "Expire images older than 14 days",
+                    "selection": {
+                        "tagStatus": "untagged",
+                        "countType": "sinceImagePushed",
+                        "countUnit": "days",
+                        "countNumber": 14
+                    },
+                    "action": {
+                        "type": "expire"
+                    }
+                },
+                {
+                    "rulePriority": 2,
+                    "description": "Keep last 30 images",
+                    "selection": {
+                        "tagStatus": "tagged",
+                        "tagPrefixList": ["v"],
+                        "countType": "imageCountMoreThan",
+                        "countNumber": 30
+                    },
+                    "action": {
+                        "type": "expire"
+                    }
+                }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+
+Outputs:
+  ECRURI:
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AppModernizationECR}

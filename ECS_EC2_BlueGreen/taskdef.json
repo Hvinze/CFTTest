@@ -1,0 +1,26 @@
+{
+    "executionRoleArn": "arn:aws:iam::847370586410:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "JD-SME-App",
+            "image": "<IMAGE1_NAME>",
+            "mountPoints": [
+            ],
+            "essential": true,
+            "portMappings": [
+                {
+                    "hostPort": 80,
+                    "protocol": "http",
+                    "containerPort": 80
+                }
+            ]
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "networkMode": "awsvpc",
+    "cpu": "256",
+    "memory": "512",
+    "family": "task-devl"
+}

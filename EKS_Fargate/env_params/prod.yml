@@ -1,0 +1,23 @@
+- ParameterKey: EKSClusterName
+  ParameterValue: 'JD-SME-EKS'
+
+- ParameterKey: EKSIAMRoleName
+  ParameterValue: 'JD-SME-eks-fargate'
+
+- ParameterKey: FargateProfileName
+  ParameterValue: 'JD-SME-fargate-profile'
+
+- ParameterKey: VpcId
+  ParameterValue: 'vpc-49be512f'
+
+- ParameterKey: PrivateSubnet1
+  ParameterValue: 'subnet-763b683f'
+
+- ParameterKey: PrivateSubnet2
+  ParameterValue: 'subnet-793b031e'
+
+- ParameterKey: ClusterControlPlaneSecurityGroup
+  ParameterValue: 'sg-ef040c94'
+
+- ParameterKey: Component
+  ParameterValue: 'JD-SME'

@@ -1,0 +1,38 @@
+- ParameterKey: VPC
+  ParameterValue: "appModVPC"
+
+- ParameterKey: SubnetID1
+  ParameterValue: "subnet-763b683f"
+
+- ParameterKey: SubnetID2
+  ParameterValue: "subnet-793b031e"
+
+- ParameterKey: EFSSecurityGroup
+  ParameterValue: "sg-0eccb42b821308973"
+
+- ParameterKey: BackupPolicy
+  ParameterValue: "ENABLED"
+
+- ParameterKey: Encrypted
+  ParameterValue: "true"
+
+- ParameterKey: TransitionToIA
+  ParameterValue: "AFTER_7_DAYS"
+
+- ParameterKey: TransitionToPrimaryStorageClass
+  ParameterValue: "AFTER_1_ACCESS"
+
+- ParameterKey: PerformanceMode
+  ParameterValue: "generalPurpose"
+
+- ParameterKey: ThroughputMode
+  ParameterValue: "provisioned"
+
+- ParameterKey: ProvisionedThroughputInMibps
+  ParameterValue: "1"
+
+- ParameterKey: Name
+  ParameterValue: "aws_efs"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"

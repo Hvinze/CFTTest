@@ -1,0 +1,283 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  EKSClusterName:
+    Type: String
+    Description: The desired name of your AWS EKS Cluster.
+  
+  EKSVersion:
+    Type: String
+    Default: 1.23
+    AllowedValues:
+    - 1.21
+    - 1.22
+    - 1.23  
+    Description: The desired version of your AWS EKS Cluster.
+  
+
+  EKSIAMRoleName:
+    Type: String
+    Description: The name of the IAM role for the EKS service to assume.
+  
+  ClusterControlPlaneSecurityGroup:
+    Description: The security group ID of the cluster control plane.
+    Type: String
+
+  VpcId:
+    Description: The VPC of the worker instances
+    Type: String
+
+
+  PrivateSubnet1:
+    Description: Private Subnet 1 to Allow Routing.
+    Type: String
+
+  PrivateSubnet2:
+    Description: Private Subnet 2 to Allow Routing.
+    Type: String
+
+  FargateProfileName:
+    Description: Name of Farget Profile Name
+    Type: String
+
+  Component:
+    Description: The component name where the cluster and its associated resources are tied.
+    Type: String
+
+Mappings:
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-083654bd07b5da81d 
+    us-east-2:
+      HVM64: ami-0629230e074c580f2    
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    -
+      Label:
+        default: "EKS Cluster Information"
+      Parameters:
+        - EKSClusterName
+        - EKSVersion
+          # - EKSNodeGroupName
+          #- EKSDesiredWorkerNode
+          #- EKSWorkerNodeInstanceType
+        - EKSIAMRoleName
+ #       - EKSKeyPair
+    -
+      Label:
+        default: "Worker Network Configuration"
+      Parameters:
+        - VpcId
+        # - Subnets
+        - PrivateSubnet1
+        - PrivateSubnet2        
+
+Mappings:
+  ServicePrincipals:
+    aws-cn:
+      ec2: ec2.amazonaws.com.cn
+    aws-us-gov:
+      ec2: ec2.amazonaws.com
+    aws:
+      ec2: ec2.amazonaws.com
+
+Resources:
+
+## Here ##  
+  eksSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-SecurityGroup"
+        - Key: Project
+          Value: JD-SME
+
+# 2
+  eksSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow node to communicate with each other
+      GroupId: !Ref eksSecurityGroup
+      SourceSecurityGroupId: !Ref eksSecurityGroup
+      IpProtocol: '-1'
+      FromPort: 0
+      ToPort: 65535
+# 3
+  eksSecurityGroupFromControlPlaneIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow worker Kubelets and pods to receive communication from the cluster control plane
+      GroupId: !Ref eksSecurityGroup
+      SourceSecurityGroupId: !Ref ClusterControlPlaneSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1025
+      ToPort: 65535
+# 4
+  ControlPlaneEgressToeksSecurityGroup:
+    Type: AWS::EC2::SecurityGroupEgress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow the cluster control plane to communicate with worker Kubelet and pods
+      GroupId: !Ref ClusterControlPlaneSecurityGroup
+      DestinationSecurityGroupId: !Ref eksSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1025
+      ToPort: 65535
+# 5
+  eksSecurityGroupFromControlPlaneOn443Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow pods running extension API servers on port 443 to receive communication from cluster control plane
+      GroupId: !Ref eksSecurityGroup
+      SourceSecurityGroupId: !Ref ClusterControlPlaneSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+# 6
+  ControlPlaneEgressToeksSecurityGroupOn443:
+    Type: AWS::EC2::SecurityGroupEgress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow the cluster control plane to communicate with pods running extension API servers on port 443
+      GroupId: !Ref ClusterControlPlaneSecurityGroup
+      DestinationSecurityGroupId: !Ref eksSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+# 7
+  ClusterControlPlaneSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: eksSecurityGroup
+    Properties:
+      Description: Allow pods to communicate with the cluster API Server
+      GroupId: !Ref ClusterControlPlaneSecurityGroup
+      SourceSecurityGroupId: !Ref eksSecurityGroup
+      IpProtocol: tcp
+      ToPort: 443
+      FromPort: 443
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join
+        - '/'
+        - - '/aws/eks'
+          - !Join
+            - '-'
+            - - !Ref EKSClusterName
+              - 'fargate'
+          - 'cluster'
+      RetentionInDays: 7
+      Tags:
+        -
+          Key: Name
+          Value: !Ref EKSClusterName
+        -
+          Key: component
+          Value: !Ref Component
+
+  PodLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/eks/mgmt-cluster-fargate
+      RetentionInDays: 7
+      Tags:
+        -
+          Key: Name
+          Value: !Ref EKSClusterName
+        -
+          Key: component
+          Value: !Ref Component
+
+  eksIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - eks.amazonaws.com
+            Action:
+            - 'sts:AssumeRole'
+      RoleName: !Ref EKSIAMRoleName
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  eksCluster:
+    Type: AWS::EKS::Cluster
+    DependsOn: [LogGroup]
+    Properties:
+      Name: !Join
+        - '-'
+        - - !Ref EKSClusterName
+          - 'fargate'
+      Version: !Ref EksClusterVersion
+      Name: !Ref EKSClusterName
+      Version: !Ref EKSVersion
+      RoleArn:
+        "Fn::GetAtt": ["eksIAMRole", "Arn"]
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - !Ref eksSecurityGroup
+        SubnetIds:
+          # - !Ref Subnets
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: api
+            - Type: audit
+      Tags:
+        - Key: component
+          Value: !Ref Component
+
+  EKSFargateProfile:
+    Type: 'AWS::EKS::FargateProfile'
+    Properties:
+      FargateProfileName: !Ref FargateProfileName
+      ClusterName: !Ref EKSClusterName
+      PodExecutionRoleArn: 'arn:aws:iam::847370586410:role/AppModernization-AmazonEKSFargatePodExecutionRole'
+      Subnets:
+        #!Ref Subnets
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2   
+      Selectors:
+        - Namespace: my-namespace
+          Labels:
+            - Key: my-key
+              Value: my-value
+      Tags:
+        -
+          Key: Name
+          Value: !Ref EKSClusterName
+        -
+          Key: component
+          Value: !Ref Component
+
+    DependsOn: [eksCluster]
+
+Outputs:
+
+  #NodeInstanceRole:
+   # Description: The node instance role
+   # Value: !GetAtt NodeInstanceRole.Arn
+
+  ClusterCertificate:
+    Description: The cluster certificate
+    Value: !GetAtt eksCluster.CertificateAuthorityData
+
+  ClusterEndpoint:
+    Description: The cluster endpoint
+    Value: !GetAtt eksCluster.Endpoint
+

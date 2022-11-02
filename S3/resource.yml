@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create S3 Bucket"
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: The name of the Bucket
+
+  AccessControl:
+    Type: String
+    Description: Access Control of the Bucket
+    AllowedValues:
+      - "Private"
+      - "PublicRead"
+      - "PublicReadWrite"
+      - "AuthenticatedRead"
+      - "LogDeliveryWrite"
+      - "BucketOwnerRead"
+      - "BucketOwnerFullControl"
+      - "AwsExecRead"
+    Default: BucketOwnerFullControl
+
+  BucketVersioning:
+    Type: String
+    Description: Enable or Disable s3 bucket versioning
+    AllowedValues:
+      - "Enabled" 
+      - "Suspended"
+    Default: Enabled
+
+  LifecycleStatus:
+    Type: String
+    Description: Enable or disable lifecycle configuration for the S3 Bucket
+    AllowedValues:
+      - "Enabled" 
+      - "Disabled"
+
+  Name:
+    Type: String
+    Description: Name of the resource
+
+  component:
+    Type: String
+    Description: Tag used for cost tracking and billing
+
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+       AccessControl: !Ref AccessControl
+
+       BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'AES256'
+              #SSEAlgorithm: 'aws:kms'
+              #KMSMasterKeyID: KMS-KEY-ARN
+
+
+       BucketName: !Ref BucketName
+  
+       LifecycleConfiguration: 
+         Rules:
+           - Id: Rule1
+             Status: !Ref LifecycleStatus
+             Transitions:
+               - StorageClass: STANDARD_IA
+                 TransitionInDays: 30
+               - StorageClass: GLACIER
+                 TransitionInDays: 60
+
+       VersioningConfiguration: 
+            Status: !Ref BucketVersioning
+
+       PublicAccessBlockConfiguration:
+           BlockPublicAcls: true
+           BlockPublicPolicy: true
+           IgnorePublicAcls: true
+           RestrictPublicBuckets: true
+
+       Tags:
+         -   Key: Name
+             Value: !Ref Name
+        
+         -   Key: Component
+             Value: !Ref component

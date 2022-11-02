@@ -1,0 +1,88 @@
+trigger: none
+
+parameters:
+  - name: envName
+    displayName: Environment
+    type: string
+    values:
+    - 'devl'
+    - 'qual'
+    - 'cert'
+    - 'prod'
+
+  - name: ResourceName
+    displayName: ResourceName
+    type: string
+    values:
+    - 'CustomResource1'
+
+  - name: Operation
+    displayName: Operation
+    type: string
+    values:
+    - 'ValidateStack'
+    - 'CreateStack'
+    - 'DeleteStack'
+
+jobs:
+
+- ${{ if contains(parameters.Operation, 'ValidateStack') }}:
+  - job: 'CreateStack_${{ parameters.ResourceName }}'
+    timeoutInMinutes: 10
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.AWSCLI.AWSCLI@1
+        displayName: 'AWS CLI: Validate Cloudformation Template'
+        inputs:
+          regionName: 'us-west-2'
+          awsCommand: 'cloudformation'
+          awsSubCommand: 'validate-template'
+          awsArguments: '--debug  --color on --template-body file://templates/resource.yml'
+          failOnStandardError: false
+
+- ${{ if contains(parameters.Operation, 'CreateStack') }}:
+  - job: 'CreateStack_${{ parameters.ResourceName }}'
+    timeoutInMinutes: 10
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationCreateOrUpdateStack.CloudFormationCreateOrUpdateStack@1
+        displayName: 'Create/Update Stack: AppModTest'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: CustomResource1
+           templateFile: Infra/CFT/DeploymentGroup/resource.yml
+           templateParametersFile: Infra/CFT/DeploymentGroup/envName/devl.yml
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteApproval_${{ parameters.ResourceName }}'
+    timeoutInMinutes: 10
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool: server
+    steps:
+      - task: ManualValidation@0
+        displayName: 'Manual Validation'
+        inputs:
+          notifyUsers: 'ankit.panchal@yash.com'
+          instructions: 'Please review Delete Stack Operation'
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteStack_${{ parameters.ResourceName }}'
+    timeoutInMinutes: 10
+    dependsOn: 'DeleteApproval_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationDeleteStack.CloudFormationDeleteStack@1
+        displayName: 'Delete Stack: AppModTest'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: CustomResource1
+        timeoutInMinutes: 15
+
+

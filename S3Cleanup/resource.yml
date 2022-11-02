@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creates Lambda Function"
+
+Parameters:
+  Runtime:
+    Description: The identifier of the function's runtime
+    Type: String
+
+  Handler:
+    Description: The name of the method within your code that Lambda calls to execute your function
+    Type: String
+
+  Name:
+    Description: The name of the Lambda function
+    Type: String
+
+  component:
+    Description: Tag used for cost tracking and billing
+    Type: String
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties: 
+      Code: 
+        ZipFile: |
+          #!/usr/bin/env python3
+
+          import io
+          import boto3
+          import traceback
+          import sys
+
+          
+
+          def lambda_handler(event, context):
+            S3_BUCKET_NAME = event['S3_BUCKET_NAME']
+            AWS_REGION = event['AWS_REGION']
+   
+            s3_resource = boto3.resource("s3", region_name=AWS_REGION)
+            s3_bucket = s3_resource.Bucket(S3_BUCKET_NAME)
+            
+            def cleanup_s3_bucket():
+                
+                  for s3_object in s3_bucket.objects.all():
+                      s3_object.delete()
+                  for s3_object_ver in s3_bucket.object_versions.all():
+                      s3_object_ver.delete()
+                  print("S3 Bucket cleaned up")
+                        
+            cleanup_s3_bucket()
+            s3_bucket.delete()
+            print("S3 Bucket deleted")
+
+      FunctionName: !Ref Name
+      Handler: !Ref Handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: !Ref Runtime
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Component
+        Value: !Ref component
+
+  LambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 'lambda.amazonaws.com'
+          Action: 'sts:AssumeRole'
+      Policies:
+      - PolicyName: s3
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+             -   's3:*'
+            Resource: '*' 
+
+  LambdaPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+      - !Ref LambdaRole
+      PolicyName: lambdaPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'logs:CreateLogGroup'
+          - 'logs:CreateLogStream'
+          - 'logs:PutLogEvents'
+          Resource: '*'
+
+Outputs:
+  ServiceLambdaFunctionQualifiedArn:
+    Export:
+      Name: LambdaARN
+    Value:
+      Fn::GetAtt: LambdaFunction.Arn

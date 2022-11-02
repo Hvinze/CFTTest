@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creates Lambda Function and Custom resource for Code Deployment"
+
+Parameters:
+  
+  S3Bucket:
+    Description: S3 bucket where the lambda zip is present
+    Type: String
+
+  S3Key:
+    Description: Relative path to zip in lambda s3 bucket
+    Type: String
+
+  S3ObjectVersion:
+    Description: Version of lambda zip
+    Type: String
+   
+  Name:
+    Description: The name of the Lambda function
+    Type: String
+  
+  component:
+    Description: Tag used for cost tracking and billing
+    Type: String
+
+  RegionName:
+    Description: AWS Region
+    Type: String
+
+  ApplicationName:
+    Description: Name of the ECS application
+    Type: String
+
+  DeploymentGroupName:
+    Description: Name of the deployment group
+    Type: String
+
+  DeploymentConfig:
+    Description: Name of the deployment config name
+    Type: String
+
+  ServiceRoleArn:
+    Description: ARN of the service role
+    Type: String
+
+  TGProd:
+    Description: Name of the Target group1
+    Type: String
+
+  TGTest:
+    Description: Name of the Target group2
+    Type: String
+
+  ProdListener:
+    Description: ARN of listener1
+    Type: String
+
+  TestListener:
+    Description: ARN of listener2
+    Type: String
+
+  ServiceName:
+    Description: Name of the service
+    Type: String
+
+  ClusterName:
+    Description: Name of the cluster
+    Type: String
+
+  TagName:
+    Description: Tag used for naming
+    Type: String
+
+  TagComponent:
+    Description: Tag used for billing and tracking
+    Type: String
+
+Resources:
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties: 
+      Code: 
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+        S3ObjectVersion: !Ref S3ObjectVersion
+
+      FunctionName: !Ref Name
+      Handler: lambda_function.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.7
+      Tags: 
+      - Key: Name
+        Value: !Ref Name
+      - Key: Component
+        Value: !Ref component
+
+  LambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 'lambda.amazonaws.com'
+          Action: 'sts:AssumeRole'
+      Policies:
+      - PolicyName: CodeDeployPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+             -   's3:*'
+             -   'logs:*'
+             -   'codedeploy:*'
+             -   'codecommit:*'
+             -   'ecs:*'
+            Resource: '*' 
+          - Effect: Allow
+            Action:
+             -   'iam:PassRole'
+            Resource: 'arn:aws:iam::847370586410:role/example-role' 
+
+  LambdaPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles:
+      - !Ref LambdaRole
+      PolicyName: lambdaPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - 'ecs:*'
+          Resource: '*'
+
+  DeploymentGroup:
+    Type: "Custom::DeploymentGroup"
+    Properties:
+      ServiceToken: !GetAtt LambdaFunction.Arn
+      RegionName: !Ref RegionName
+      ApplicationName: !Ref ApplicationName
+      DeploymentGroupName: !Ref DeploymentGroupName
+      DeploymentConfig: !Ref DeploymentConfig
+      ServiceRoleArn: !Ref ServiceRoleArn
+      TGProd: !Ref TGProd
+      TGTest: !Ref TGTest
+      ProdListener: !Ref ProdListener
+      TestListener: !Ref TestListener
+      ServiceName: !Ref ServiceName
+      ClusterName: !Ref ClusterName
+      TagName: !Ref TagName
+      TagComponent: !Ref TagComponent

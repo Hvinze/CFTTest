@@ -1,0 +1,68 @@
+trigger: none
+
+parameters:
+  - name: envName
+    displayName: Environment
+    type: string
+    values:
+    - 'devl'
+    - 'qual'
+    - 'cert'
+    - 'prod'
+
+  - name: ResourceName
+    displayName: ResourceName
+    type: string
+    values:
+    - 'EFS'
+
+  - name: Operation
+    displayName: Operation
+    type: string
+    values:
+    - 'CreateStack'
+    - 'DeleteStack'
+
+jobs:
+- ${{ if contains(parameters.Operation, 'CreateStack') }}:
+  - job: 'CreateStack_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationCreateOrUpdateStack.CloudFormationCreateOrUpdateStack@1
+        displayName: 'Create/Update Stack: EFSStack'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: EFSStack
+           templateFile: Infra/CFT/EFS/resource.yml
+           templateParametersFile: Infra/CFT/EFS/env_params/devl.yml
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteApproval_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool: server
+    steps:
+      - task: ManualValidation@0
+        displayName: 'Manual Validation'
+        inputs:
+          notifyUsers: 'harshit.vinze@yash.com'
+          instructions: 'Please review Delete Stack Operation'
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteStack_${{ parameters.ResourceName }}'
+    dependsOn: 'DeleteApproval_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationDeleteStack.CloudFormationDeleteStack@1
+        displayName: 'Delete Stack: EFSStack'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: EFSStack
+        timeoutInMinutes: 15
+
+

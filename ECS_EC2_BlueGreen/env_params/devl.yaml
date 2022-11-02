@@ -1,0 +1,43 @@
+- ParameterKey: codepipelinename
+  ParameterValue: ecs-ec2-blue-green1
+
+- ParameterKey: region
+  ParameterValue: us-west-2
+
+- ParameterKey: bucketname
+  ParameterValue: jd-ecs-azure-bucket
+
+- ParameterKey: latestimagetag
+  # ParameterValue: e83778dd23d124b2d4008e7ff45bfba8251d4ca6
+  ParameterValue: latest
+
+- ParameterKey: reponame
+  ParameterValue: appmod
+
+- ParameterKey: applicationname
+  ParameterValue: deployment-app-ecs-ec2
+
+- ParameterKey: deploymentgrpname
+  ParameterValue: ecs-ec2-deploymentgrp
+
+# - ParameterKey: keyname
+#   ParameterValue: owner
+
+# - ParameterKey: valuename
+#   ParameterValue: JD-SME
+
+- ParameterKey: artifactbucket
+  ParameterValue: jd-ecs-artifact-bucket
+
+- ParameterKey: codepipelinearn
+  ParameterValue: arn:aws:iam::847370586410:role/service-role/AWSCodePipelineServiceRole-us-east-1-testappapcodedeplypipeline
+  # ParameterValue: arn:aws:iam::847370586410:role/example-role
+
+- ParameterKey: imagename
+  ParameterValue: appmodcontainername
+
+- ParameterKey: artifactzip
+  ParameterValue: artifact.zip
+
+
+

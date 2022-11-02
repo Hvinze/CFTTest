@@ -1,0 +1,20 @@
+- ParameterKey: VPC
+  ParameterValue: "vpc-09814294f140cac4e"
+
+- ParameterKey: SubnetA
+  ParameterValue: "subnet-0dbe095a74d090f71"
+
+- ParameterKey: SubnetB
+  ParameterValue: "subnet-0876769b280289250"
+
+- ParameterKey: EC2SecurityGroup
+  ParameterValue: "sg-04153325b23fe6b86"
+
+- ParameterKey: Ec2InstanceType
+  ParameterValue: "t2.micro"
+
+- ParameterKey: Name
+  ParameterValue: "AppModInstance"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"

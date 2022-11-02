@@ -1,0 +1,150 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to Create Cloudwatch alarm
+
+Parameters:
+
+  AlarmName:
+    Type: String
+    Description: Name of the Alarm
+
+  ComparisonOperator:
+    Type: String
+    Description : Arithmetic operation to use when comparing the specified statistic and threshold
+    AllowedValues:
+      - "GreaterThanThreshold"
+      - "GreaterThanOrEqualToThreshold"
+      - "LessThanThreshold"
+      - "LessThanOrEqualToThreshold"
+
+  MetricName:
+    Type: String
+    Description: Name of the metric associated with the alarm
+
+  Namespace:
+    Type: String
+    Description: Namespace of the metric associated with the alarm
+  
+  Statistic:
+    Type: String
+    Description: Statistic for the metric associated with the alarm
+    AllowedValues:
+      - "Average"
+      - "Maximum"
+      - "Minimum"
+      - "SampleCount"
+      - "Sum"
+
+  Period:
+    Type: String
+    Description: The period, in seconds, over which the statistic is applied
+
+  EvaluationPeriods:
+    Type: String
+    Description: The number of periods over which data is compared to the specified threshold
+
+  Threshold:
+    Type: String
+    Description: The value to compare with the specified statistic
+
+  #EndPoint:
+  #  Type: String
+  #  Description: The endpoint that receives notifications from the Amazon SNS topic
+  #  Default: harshit.vinze@yash.com
+
+  #TopicName:
+  #  Type: String
+  #  Description: The name of the topic you want to create
+  #  Default: EC2Topic
+
+  SNSArn:
+    Type: String
+    Description: ARN of the SNS Topic
+
+  InstanceId:
+    Type: String
+    Description: Id of the instance  
+
+  #Name:
+  #  Type: String
+  #  Description: Tag used for naming resource
+  #  Default: EC2Alarm
+#
+  #component:
+  #  Type: String
+  #  Description: Tag used for billing and tracking purposes
+  #  Default: JD-SME
+  
+Resources:
+
+  CPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: CPU alarm for my instance
+      AlarmName: !Ref AlarmName
+      AlarmActions:
+      - !Ref SNSArn
+      MetricName: !Ref MetricName
+      Namespace: !Ref Namespace
+      Statistic: !Ref Statistic
+      Period: !Ref Period
+      EvaluationPeriods: !Ref EvaluationPeriods
+      Threshold: !Ref Threshold
+      ComparisonOperator: !Ref ComparisonOperator
+      TreatMissingData: ignore
+      Dimensions:
+      - Name: InstanceId
+        Value:
+          !Ref InstanceId
+
+  #MySNSTopic: 
+  #  Type: AWS::SNS::Topic
+  #  Properties: 
+  #    Subscription: 
+  #      - Endpoint: !Ref EndPoint
+  #        Protocol: "email"
+  #    TopicName: !Ref TopicName  
+  #    Tags: 
+  #      - Key: Name
+  #        Value: !Ref Name
+  #      - Key: Component
+  #        Value: !Ref component
+
+#Add the following Alarm for Load Balancer
+  #500ErrorAlarm:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    AlarmDescription: Unusually high level of internal 500 ALB East errors
+  #    AlarmName: 500ErrorAlarm
+  #    AlarmActions:
+  #    - !Ref SNSArn
+  #    MetricName: HTTPCode_ELB_500_Count
+  #    Namespace: !Ref Namespace
+  #    Statistic: Sum
+  #    Period: 300
+  #    EvaluationPeriods: 1
+  #    Threshold: 5
+  #    ComparisonOperator: GreaterThanOrEqualToThreshold
+  #    TreatMissingData: notBreaching
+  #    InsufficientDataActions: []
+
+#Add the following Alarm for RDS
+#PostgresCpuAlarm:
+#  Type: AWS::CloudWatch::Alarm
+#  Condition: AlarmsEnabled
+#  DependsOn: Postgres
+#  Properties:
+#    AlarmDescription: !Sub 'DB CPU utilization is over ${DatabaseAlarmMaxCpuPercent}% for ${DatabaseAlarmEvaluationPeriods} period(s) of ${DatabaseAlarmEvaluationPeriodSeconds} seconds'
+#    TreatMissingData: notBreaching
+#    Namespace: AWS/RDS
+#    MetricName: CPUUtilization
+#    Unit: Percent
+#    Statistic: Average
+#    EvaluationPeriods: !Ref DatabaseAlarmEvaluationPeriods
+#    Period: !Ref DatabaseAlarmEvaluationPeriodSeconds
+#    Threshold: !Ref DatabaseAlarmMaxCpuPercent
+#    ComparisonOperator: GreaterThanOrEqualToThreshold
+#    Dimensions:
+#      - Name: DBInstanceIdentifier
+#        Value: !Ref Postgres
+#    AlarmActions:
+#      - !Ref DatabaseAlarmTopic

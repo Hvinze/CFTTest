@@ -1,0 +1,11 @@
+- ParameterKey: myDescription
+  ParameterValue: An example symmetric encryption KMS Key
+
+# - ParameterKey: PendingWindowInDaysvar
+#   ParameterValue: 7
+
+- ParameterKey: Name
+  ParameterValue: KMS Resource
+
+- ParameterKey: component
+  ParameterValue: JD-SME

@@ -1,0 +1,15 @@
+- ParameterKey: secretname
+  ParameterValue: Dbsecret
+
+- ParameterKey: component
+  ParameterValue: JD-SME
+
+- ParameterKey: mystringkey
+  ParameterValue: "password"
+
+- ParameterKey: eliminate_characters
+  ParameterValue: '"@/\'
+
+- ParameterKey: secretvalue
+  ParameterValue: '{"username":"MasterUsername","password":"secret-password"}'
+

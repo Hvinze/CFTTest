@@ -1,0 +1,67 @@
+trigger: none
+
+parameters:
+  - name: envName
+    displayName: Environment
+    type: string
+    values:
+    - 'devl'
+    - 'qual'
+    - 'cert'
+    - 'prod'
+
+  - name: ResourceName
+    displayName: ResourceName
+    type: string
+    values:
+    - 'AppPipeline'
+
+  - name: Operation
+    displayName: Operation
+    type: string
+    values:
+    - 'CreateStack'
+    - 'DeleteStack'
+
+jobs:
+- ${{ if contains(parameters.Operation, 'CreateStack') }}:
+  - job: 'CreateStack_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationCreateOrUpdateStack.CloudFormationCreateOrUpdateStack@1
+        displayName: 'Create/Update Stack: ECSEC2BlueGreen'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: ECSEC2BlueGreen
+           templateFile: Infra/CFT/ECS_EC2_BlueGreen/resource.yaml
+           templateParametersFile: Infra/CFT/ECS_EC2_BlueGreen/env_params/devl.yaml
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteApproval_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool: server
+    steps:
+      - task: ManualValidation@0
+        displayName: 'Manual Validation'
+        inputs:
+          # notifyUsers: 'ankit.panchal@yash.com'
+          notifyUsers: 'anubhav.ajmera@yash.com'
+          instructions: 'Please review Delete Stack Operation'
+        timeoutInMinutes: 15
+
+- ${{ if contains(parameters.Operation, 'DeleteStack') }}:
+  - job: 'DeleteStack_${{ parameters.ResourceName }}'
+    dependsOn: 'DeleteApproval_${{ parameters.ResourceName }}'
+    condition: eq('${{ parameters.envName }}', 'devl')
+    pool:
+      name: JD-SME
+    steps:
+      - task: AmazonWebServices.aws-vsts-tools.CloudFormationDeleteStack.CloudFormationDeleteStack@1
+        displayName: 'Delete Stack: ECSEC2BlueGreen'
+        inputs:
+           regionName: 'us-west-2'
+           stackName: ECSEC2BlueGreen
+        timeoutInMinutes: 15

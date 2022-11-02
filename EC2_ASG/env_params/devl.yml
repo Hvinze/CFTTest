@@ -1,0 +1,44 @@
+- ParameterKey: VpcId
+  ParameterValue: "vpc-49be512f"
+
+- ParameterKey: VpcEc2Subnet1
+  ParameterValue: "subnet-009b99937c6f5e8e4"
+
+- ParameterKey: VpcEc2Subnet2
+  ParameterValue: "subnet-793b031e"
+
+- ParameterKey: Ec2ImageId
+  ParameterValue: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
+- ParameterKey: Ec2InstanceType
+  ParameterValue: "t2.micro"
+
+- ParameterKey: Ec2InstanceTagName
+  ParameterValue: "test-LaunchTemplate-ec2-20181115"
+
+- ParameterKey: Ec2InstanceComponentTagName
+  ParameterValue: "LaunchTemplate-ec2-Component"
+
+- ParameterKey: Ec2AutoscaleMinSize
+  ParameterValue: "1"
+
+- ParameterKey: Ec2AutoscaleMaxSize
+  ParameterValue: "1"
+
+- ParameterKey: Ec2AutoscaleDesiredCapacity
+  ParameterValue: "1"
+
+- ParameterKey: VolumeType
+  ParameterValue: "gp2"
+
+- ParameterKey: VolumeSize
+  ParameterValue: "10"
+
+- ParameterKey: SecurityGroup
+  ParameterValue: "sg-0eccb42b821308973"
+
+- ParameterKey: DisableApiTermination
+  ParameterValue: "false"
+
+- ParameterKey: Monitoring
+  ParameterValue: "true"

@@ -1,0 +1,55 @@
+---
+
+- ParameterKey: S3Bucket
+  ParameterValue: deletethisbkt
+
+- ParameterKey: S3Key
+  ParameterValue: lambda.zip
+
+- ParameterKey: S3ObjectVersion
+  ParameterValue: YtYqeCi7KT4V1HlJBEukxlWW61i9kOry
+
+- ParameterKey: Name
+  ParameterValue: LambdFnCodeDeploymentGrp
+
+- ParameterKey: component
+  ParameterValue: JD-SME
+
+- ParameterKey: RegionName
+  ParameterValue: us-west-2
+
+- ParameterKey: ApplicationName
+  ParameterValue: deployment-app
+
+- ParameterKey: DeploymentGroupName
+  ParameterValue: deployment-group-new
+
+- ParameterKey: DeploymentConfig
+  ParameterValue: EcsCanary25Percent20Minutes
+
+- ParameterKey: ServiceRoleArn
+  ParameterValue: arn:aws:iam::847370586410:role/example-role
+
+- ParameterKey: ClusterName
+  ParameterValue: JD-appmod-cluster
+
+- ParameterKey: ServiceName
+  ParameterValue: JD-app-mod-service
+
+- ParameterKey: TGProd 
+  ParameterValue: JD-appmod-target
+
+- ParameterKey: TGTest 
+  ParameterValue: green-tg
+
+- ParameterKey: ProdListener 
+  ParameterValue: arn:aws:elasticloadbalancing:us-west-2:847370586410:listener/app/JD-app-mod-lb/ce04115342bba6d5/3fac02e84496f601
+
+- ParameterKey: TestListener 
+  ParameterValue: arn:aws:elasticloadbalancing:us-west-2:847370586410:listener/app/JD-app-mod-lb/ce04115342bba6d5/3d7b7de24327e41f
+
+- ParameterKey: TagName 
+  ParameterValue: LambdFnCodeDeploymentGrp
+
+- ParameterKey: TagComponent 
+  ParameterValue: JD-SME

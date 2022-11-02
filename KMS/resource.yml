@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create a KMS key and its alias"
+
+
+Parameters:
+  myDescription:
+    Type: String
+    Description: description about the kms key
+  Name:
+    Type: String
+    Description: Name of the resource
+  component:
+    Type: String
+    Description: Tag used for cost tracking and billing
+  Enabled:
+    Type: String
+    Description: Specifies whether the KMS key is enabled
+    AllowedValues:
+      - "true" 
+      - "false"
+  EnableKeyRotation:
+    Type: String
+    Description: Enables automatic rotation of the key material
+    AllowedValues:
+      - "true" 
+      - "false"
+  KeySpec:
+    Type: String
+    Description: Specifies the type of KMS key to create
+  KeyUsage:
+    Type: String
+    Description: Determines the cryptographic operations for which you can use the KMS key
+  MultiRegion:
+    Type: String
+    Description: Creates a multi-Region primary key
+    AllowedValues:
+      - "true" 
+      - "false"
+  
+
+
+Resources:
+
+# Creates AWS KMS key
+  MyKey4:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Ref myDescription
+      Enabled: !Ref Enabled
+      EnableKeyRotation: !Ref EnableKeyRotation
+      KeySpec: !Ref KeySpec
+      KeyUsage: !Ref KeyUsage
+      MultiRegion: !Ref MultiRegion
+      PendingWindowInDays: 7
+
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: key-default-1
+        Statement:
+
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal: 
+              AWS: arn:aws:iam::847370586410:root
+            Action: kms:*
+            Resource: '*'
+
+          - Sid: Allow administration of the key
+            Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::847370586410:user/anubhav.ajmera
+            Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:TagResource
+              - kms:UntagResource
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+            Resource: '*'
+
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              AWS: arn:aws:iam::847370586410:user/anubhav.ajmera
+            Action:
+            - kms:Encrypt
+            - kms:Decrypt
+            - kms:ReEncrypt*
+            - kms:GenerateDataKey*
+            - kms:DescribeKey
+            Resource: "*"  
+
+            # - Sid: Allow attachment of persistent resources
+            #   Effect: Allow
+            #   Principal:
+            #     AWS: arn:aws:iam::847370586410:user/anubhav.ajmera
+            #   Action:
+            #   - kms:CreateGrant
+            #   - kms:ListGrants
+            #   - kms:RevokeGrant
+            #   Resource: "*"
+            #   Condition:
+            #     Bool:
+            #       kms: GrantIsForAWSResource: 'true'
+      Tags:
+          - Key: Name 
+            Value: !Ref Name
+
+          - Key: component
+            Value: !Ref component
+          
+      
+
+# Creates AWS KMS key alias
+  MyAlias:
+    Type: AWS::KMS::Alias
+    Properties: 
+      AliasName: alias/my-key-alias1
+      TargetKeyId: !Ref MyKey4

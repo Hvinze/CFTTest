@@ -1,0 +1,217 @@
+- ParameterKey: vpcId
+  ParameterValue: "vpc-49be512f"
+
+- ParameterKey: ClusterName
+  ParameterValue: "JD-SME-Cluster-EC21"
+
+- ParameterKey: Name1
+  ParameterValue: "ECS-EC2-ecs-cluster-devl"
+
+- ParameterKey: Name2
+  ParameterValue: "ECS-EC2-task-definition-devl"
+
+- ParameterKey: Name3
+  ParameterValue: "ECS-EC2-service-devl"
+
+- ParameterKey:  ContainerDefinitionsMountPointsContainerPath
+  ParameterValue: "/www"
+
+- ParameterKey: ContainerDefinitionsMountPointsSourceVolume
+  ParameterValue: "shared-efs-volume"
+
+- ParameterKey: FilesystemId
+  ParameterValue: "fs-0ee6458e60b439591"
+
+- ParameterKey: ContainerDefinitionsImage
+  ParameterValue: "847370586410.dkr.ecr.us-west-2.amazonaws.com/hello-world:latest"
+
+- ParameterKey: LogConfigurationLogDriver
+  ParameterValue: "awslogs"
+
+- ParameterKey: LogConfigurationOptionsawslogsregion
+  ParameterValue: "us-west-2"
+
+- ParameterKey: LogConfigurationOptionsawslogsstreamprefix
+  ParameterValue: "cluster-stream"
+
+- ParameterKey: ContainerDefinitionsPortMappingsContainerPort
+  ParameterValue: "80"
+
+- ParameterKey: ContainerDefinitionsPortMappingsProtocol
+  ParameterValue: "http"
+
+- ParameterKey: ContainerDefinitionsPortMappingsHostPort
+  ParameterValue: "0"
+
+- ParameterKey: Cpu
+  ParameterValue: "256"
+
+- ParameterKey: ExecutionRoleArn
+  ParameterValue: "arn:aws:iam::847370586410:role/ecsTaskExecutionRole"
+
+- ParameterKey: Family
+  ParameterValue: "task-devl"
+
+- ParameterKey: Memory
+  ParameterValue: "512"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"
+
+- ParameterKey: NetworkMode
+  ParameterValue: "bridge"
+
+- ParameterKey: RequiresCompatibilities
+  ParameterValue: "EC2"
+
+- ParameterKey: TaskRoleArn
+  ParameterValue: "arn:aws:iam::847370586410:role/ecsTaskExecutionRole"
+
+# - ParameterKey: VolumesName
+#   ParameterValue: "shared-efs-volume"
+
+- ParameterKey: VolumesEFSVolumeConfigurationRootDirectory
+  ParameterValue: "/"
+
+# - ParameterKey: VolumesEFSVolumeConfigurationTransitEncryption
+#   ParameterValue: "ENABLED"
+
+# - ParameterKey: VolumesEFSVolumeConfigurationAuthorizationConfigIAM
+#   ParameterValue: "DISABLED"
+
+# - ParameterKey: DeploymentConfigurationMaximumPercent
+#   ParameterValue: "200"
+
+# - ParameterKey: DeploymentConfigurationMinimumHealthyPercent
+#   ParameterValue: "100"
+
+  ################ service #########################
+
+- ParameterKey: DeploymentControllerType
+  ParameterValue: "CODE_DEPLOY"
+
+- ParameterKey: EnableECSManagedTags
+  ParameterValue: "false"
+
+# - ParameterKey: HealthCheckGracePeriodSeconds
+#   ParameterValue: "300"
+
+- ParameterKey: LaunchType
+  ParameterValue: "EC2"
+
+- ParameterKey: DesiredCount
+  ParameterValue: "2"
+
+- ParameterKey: LoadBalancersContainerName
+  ParameterValue: "JD-SME-App"
+
+- ParameterKey: TaskDefinitionName
+  ParameterValue: "JD-SME-App"
+
+- ParameterKey: LoadBalancersContainerPort
+  ParameterValue: "80"
+
+- ParameterKey: ServiceName
+  ParameterValue: "ECS-Service"
+
+# - ParameterKey: NetworkConfigurationAwsvpcConfigurationAssignPublicIp
+#   ParameterValue: "DISABLED"
+
+# - ParameterKey: NetworkConfigurationAwsvpcConfigurationSG1
+#   ParameterValue: "sg-06e0ccfb5baa80bd4"
+
+# - ParameterKey: NetworkConfigurationAwsvpcConfigurationSG2
+#   ParameterValue: "sg-07f3a88d0b9c2a653"
+
+# - ParameterKey: NetworkConfigurationAwsvpcConfigurationSubnet1
+#   ParameterValue: "subnet-793b031e"
+
+# - ParameterKey: NetworkConfigurationAwsvpcConfigurationSubnet2
+#   ParameterValue: "subnet-763b683f"
+
+# - ParameterKey: ELBListenerARN
+#   ParameterValue: "ElasticLoadBalancingV2ListenerARN"
+
+# - ParameterKey: ELBTestListenerARN
+#   ParameterValue: "ElasticLoadBalancingV2TestListenerARN"
+
+# - ParameterKey: ELBTargetGroupTG1Name
+#   ParameterValue: "ElasticLoadBalancingV2TargetGroup1ARN"
+
+# - ParameterKey: ELBTargetGroupTG2Name
+#   ParameterValue: "ElasticLoadBalancingV2TargetGroup2ARN"
+
+################## Target group #########################################
+
+- ParameterKey: TargetGroupHealthCheckEnabled
+  ParameterValue: "true"
+
+- ParameterKey: TargetGroupHealthCheckIntervalSeconds
+  ParameterValue: "20"
+
+- ParameterKey: TargetGroupHealthCheckPath
+  ParameterValue: "/"
+
+- ParameterKey: TargetGroupHealthCheckProtocol
+  ParameterValue: "HTTP"
+
+- ParameterKey: TargetGroupHealthCheckTimeoutSeconds
+  ParameterValue: "10"
+
+- ParameterKey: TargetGroup1Name
+  ParameterValue: "ECSALBTargetgrp"
+
+- ParameterKey: TargetGroup2Name
+  ParameterValue: "ECSALBTargetgrp2"
+
+- ParameterKey: TargetGroup1Port
+  ParameterValue: "80"
+
+- ParameterKey: TargetGroup2Port
+  ParameterValue: "9090"
+
+- ParameterKey: TargetGroupProtocol
+  ParameterValue: "HTTP"
+
+- ParameterKey: TargetGroupTargetType
+  ParameterValue: "instance"
+
+- ParameterKey: TargetGroupUnhealthyThresholdCount
+  ParameterValue: "3"
+
+- ParameterKey: TargetGroupHealthyThresholdCount
+  ParameterValue: "3"
+
+################### Listeners #######################################
+
+- ParameterKey: ListenersPort1
+  ParameterValue: "80"
+
+- ParameterKey: ListenersPort2
+  ParameterValue: "9090"
+
+- ParameterKey: ListenersProtocol
+  ParameterValue: "HTTP"
+
+################ load balancer #########################
+
+- ParameterKey: LoadBalancerScheme
+  ParameterValue: "internet-facing"
+
+- ParameterKey: PublicSubnet0
+  ParameterValue: "subnet-f8f129a3"
+
+- ParameterKey: PublicSubnet1
+  ParameterValue: "subnet-86229fad"
+
+- ParameterKey: PrivateSubnet0
+  ParameterValue: "subnet-763b683f"
+
+- ParameterKey: PrivateSubnet1
+  ParameterValue: "subnet-793b031e"
+
+- ParameterKey: LoadBalancerType
+  ParameterValue: "application"
+
+#############################################################
+

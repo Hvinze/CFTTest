@@ -1,0 +1,420 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template to provision a Postgres RDS Multi-AZ instance.
+
+Parameters:
+  DBInstanceIdentifier:
+    Type: String
+    Description: Name of the Database that will appear in the RDS console (alphanumeric only)
+    #Default: RDS-postgres
+
+  PubliclyAccessible:
+    Type: String
+    AllowedValues: ['true', 'false']
+    ConstraintDescription: Only true or false are allowed
+    #Default: 'false'
+
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC in which to deploy Database
+
+  Subnet1:
+    Type: String
+    Description: Subnet (Private recommended) in which to create container instances
+
+  Subnet2:
+    Type: String
+    Description: Subnet (Private recommended) in which to create container instances
+
+  DatabaseName:
+    Type: String
+    Description: Name of the Database that will appear in the RDS console (alphanumeric only)
+    AllowedPattern: '^([A-Za-z]|[0-9])+$'
+    ConstraintDescription: Must only contain alphanumeric characters
+    #Default: postgres
+
+  StorageInGb:
+    Type: Number
+    Description: The allocated storage size in GB
+    MinValue: 20
+    MaxValue: 100
+    ConstraintDescription: Must be a number between 100 and 1000
+    #Default: 20
+
+  PostgresVersion:
+    Type: String
+    Description: Postgres version
+    AllowedValues: ['13.4', '14.1', '11.10', '10.17', '9.6.23', '9.6.22']
+    ConstraintDescription: Must be a one of the available Postgres versions
+    #Default: '10.17'
+
+  DbInstanceType:
+    Type: String
+    Description: Database instance types
+    AllowedValues: [
+      db.t2.micro, db.t2.small, db.t2.medium, db.t2.large, db.t2.xlarge, db.t2.2xlarge,
+      db.m4.large, db.m4.xlarge, db.m4.2xlarge, db.m4.4xlarge, db.m4.10xlarge, db.m4.16xlarge,
+      db.r3.large, db.r3.xlarge, db.r3.2xlarge, db.r3.4xlarge, db.r3.8xlarge,
+      db.r4.large, db.r4.xlarge, db.r4.2xlarge, db.r4.4xlarge, db.r4.8xlarge, db.r4.16xlarge
+    ]
+    ConstraintDescription: Must be one of the available database instance types
+    #Default: 'db.t2.medium'
+
+  # AllowedCIDR:
+  #   Type: String
+  #   Description: Allow the IPv4 CIDR range access to Postgres
+  #   AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+  #   ConstraintDescription: 'Must be a valid CIDR range like 172.31.0.0/16'
+  #   Default: '0.0.0.0/0'
+
+  BackupRetentionInDays:
+    Type: Number
+    Description: Backup retention (in days)
+    MinValue: 1
+    ConstraintDescription: Must be a number >= 1
+    #Default: 1
+
+  PostgresMasterUsername:
+    Type: String
+    Description: The master user name
+    MinLength: 3
+    ConstraintDescription: Must be alphanumeric string of length >= 5
+    #Default: postgres
+
+  #PostgresMasterPassword:
+  #  Type: String
+  #  Description: The password for the master user
+  #  MinLength: 6
+  #  ConstraintDescription: Must be a string of length >= 8
+  #  #Default: postgres
+  #  NoEcho: true
+
+  DatabaseAlarmMaxCpuPercent:
+    Type: Number
+    Description: Database CPU % max for alarm
+    MinValue: 1
+    MaxValue: 99
+    ConstraintDescription: Must be a percentage between 1-99%
+    #Default: 80
+
+  DatabaseAlarmReadLatencyMaxSeconds:
+    Type: Number
+    Description: Read latency max for alarm
+    MinValue: 1
+    ConstraintDescription: Must be a number >= 1
+    #Default: 1
+
+  DatabaseAlarmWriteLatencyMaxSeconds:
+    Type: Number
+    Description: Write latency max for alarm
+    MinValue: 1
+    ConstraintDescription: Must be a number >= 1
+    #Default: 1
+
+  DatabaseAlarmMinFreeSpaceInBytes:
+    Type: Number
+    Description: Number of min free space bytes for alarm (if enabled), the default is 500 MB
+    MinValue: 1
+    ConstraintDescription: Must be a byte value >= 1
+    #Default: 524288000
+
+  DatabaseAlarmEvaluationPeriods:
+    Type: Number
+    Description: The number of periods over which data is compared to the specified threshold
+    MinValue: 2
+    ConstraintDescription: Must be a number >= 2
+    #Default: 2
+
+  DatabaseAlarmEvaluationPeriodSeconds:
+    Type: Number
+    Description: The time over which the specified statistic is applied. Specify time in seconds, in multiples of 60. Enhanced monitoring must be enabled if less than 500 seconds
+    MinValue: 60
+    ConstraintDescription: Must be at least 60 seconds
+    #Default: 300
+
+  EnhancedMonitoring:
+    Type: String
+    Description: The optional flag for enhanced monitoring (additional charges apply - https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.OS.html)
+    AllowedValues: ['true', 'false']
+    ConstraintDescription: Only true or false are allowed
+    #Default: 'false'
+
+  EnableAlarms:
+    Type: String
+    Description: Set to true to enable (additional charges - https://aws.amazon.com/cloudwatch/pricing/)
+    AllowedValues: ['true', 'false']
+    ConstraintDescription: Only true or false are allowed
+    #Default: 'false'
+
+
+  PreferredBackupWindow:
+    Description: 'The daily time range in UTC during which you want to create automated backups.'
+    Type: String
+    #Default: '09:54-10:24'
+
+  PreferredMaintenanceWindow:
+    Description: The weekly time range (in UTC) during which system maintenance can occur.
+    Type: String
+    #Default: 'sat:07:00-sat:07:30'
+
+  DBParameterGroupName:
+    Description: 'Optional name of an existing DB parameter group.'
+    Type: String
+    #Default: ''
+
+  #KmsKeyId:
+  #  Type: String
+  #  Description: ARN of the KMS Key used for encrypting the storage
+
+  # DBSnapshotIdentifier:
+  #   Description: 'Optional name or Amazon Resource Name (ARN) of the DB snapshot from which you want to restore (leave blank to create an empty database).'
+  #   Type: String
+  #   Default: ''
+
+  ExistingSecurityGroup:
+    Description: 'Optional name of an existing DB parameter group.'
+    #Type: String
+    Type: AWS::EC2::SecurityGroup::Id    
+    #Default: ''
+    
+  Name:
+    Type: String
+    Description: Tag used for naming
+    #Default: RDS-Postgres-resource
+
+  component:
+    Type: String
+    Description: Tag used for billing and tracking
+    #Default: JD-SME
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Postgres
+        Parameters:
+          - DatabaseName
+          - PostgresVersion
+          - PubliclyAccessible
+          - PostgresMasterUsername
+          #- PostgresMasterPassword
+          #- KmsKeyId
+          - DbInstanceType
+          - StorageInGb
+          - BackupRetentionInDays
+          - DBInstanceIdentifier
+          - PreferredBackupWindow
+          - PreferredMaintenanceWindow
+      - Label:
+          default: Network
+        Parameters:
+          - VpcId
+          - Subnet1
+          - Subnet2
+          - ExistingSecurityGroup
+          # - AllowedCIDR
+      - Label:
+          default: Alarms and Monitoring
+        Parameters:
+          - EnableAlarms
+          - EnhancedMonitoring
+          - DatabaseAlarmEvaluationPeriods
+          - DatabaseAlarmEvaluationPeriodSeconds
+          - DatabaseAlarmMaxCpuPercent
+          - DatabaseAlarmMinFreeSpaceInBytes
+          - DatabaseAlarmReadLatencyMaxSeconds
+          - DatabaseAlarmWriteLatencyMaxSeconds
+
+Conditions:
+  AlarmsEnabled: !Equals [ !Ref EnableAlarms, true ]
+  # HasDBSnapshotIdentifier: !Not [!Equals [!Ref DBSnapshotIdentifier, '']]
+  HasDBParameterGroupName: !Not [!Equals [!Ref DBParameterGroupName, '']]
+
+Resources:
+  # PostgresComponentSG:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupName: !Sub '${AWS::StackName} Postgres Access'
+  #     GroupDescription: Security Group which grants anyone access to Postgres
+  #     VpcId: !Ref VpcId
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 5432
+  #         ToPort: 5432
+  #         CidrIp: !Ref AllowedCIDR # Allow access from anywhere (this is why we recommend you deploy this in the private subnets so only people in the VPC can access this resource)
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Ref Name
+  #       - Key: component
+  #         Value: !Ref component
+
+  PostgresSecretKey:
+    Type: AWS::KMS::Key
+    Properties:
+      KeyPolicy:
+        Statement:
+          - Sid: "Enable IAM User Permissions"
+            Effect: "Allow"
+            Principal:
+              AWS: !Sub arn:aws:iam::847370586410:root
+            Action: "kms:*"
+            Resource: "*"
+      Tags:
+        - Key: Name 
+          Value: !Ref Name  
+        - Key: component
+          Value: !Ref component
+
+  PostgresSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      KmsKeyId: !Ref PostgresSecretKey
+      GenerateSecretString:
+        SecretStringTemplate: !Join [ '', [ '{"username": "', !Ref PostgresMasterUsername, '"}' ] ]
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+      Tags:
+        - Key: Name 
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+
+  PostgresSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: !Sub 'Database subnet group for ${AWS::StackName}'
+      SubnetIds: 
+        - !Ref Subnet1
+        - !Ref Subnet2
+      Tags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+
+  # DBSubnetGroup:
+  #   Type: 'AWS::RDS::DBSubnetGroup'
+  #   Properties:
+  #     DBSubnetGroupDescription: !Ref 'AWS::StackName'
+  #     SubnetIds: !Split [',', {'Fn::ImportValue': !Sub '${ParentVPCStack}-SubnetsPrivate'}]
+              
+
+  Postgres:
+    Type: AWS::RDS::DBInstance
+    DependsOn:
+      - PostgresSubnetGroup
+      # - PostgresComponentSG
+    Properties:
+      AllocatedStorage: !Ref StorageInGb
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: false
+      BackupRetentionPeriod: !Ref BackupRetentionInDays
+      CopyTagsToSnapshot: true
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      DBInstanceClass: !Ref DbInstanceType
+      DBName: !Ref DatabaseName
+      DBParameterGroupName: !If [HasDBParameterGroupName, !Ref DBParameterGroupName, !Ref 'AWS::NoValue']
+      DBSubnetGroupName: !Ref PostgresSubnetGroup
+      Engine: postgres
+      EngineVersion: !Ref PostgresVersion
+      # KmsKeyId: !Ref KmsKeyId
+      # DBName: !If [HasDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref DBName]
+      KmsKeyId: !GetAtt PostgresSecretKey.Arn
+      MasterUsername: !Ref PostgresMasterUsername
+      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref PostgresSecret, ':SecretString:password}}' ] ]
+      # MasterUserPassword: !If
+      # - HasDBSnapshotIdentifier
+      # - !Ref 'AWS::NoValue'
+      # - !If
+      #   - HasSecret
+      #   - !Join ['', ['{{resolve:secretsmanager:', {'Fn::ImportValue': !Sub '${ParentSecretStack}-SecretArn'}, ':SecretString:password}}']]
+      #   - !Ref DBMasterUserPassword
+      MultiAZ: true
+      PreferredBackupWindow: !Ref PreferredBackupWindow
+      PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow
+      StorageType: gp2
+      StorageEncrypted: true      
+      VPCSecurityGroups:
+        # - !Ref PostgresComponentSG
+        - !Ref ExistingSecurityGroup
+      PubliclyAccessible: !Ref PubliclyAccessible
+      Tags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+
+  DatabaseAlarmTopic:
+    Type: AWS::SNS::Topic
+    Condition: AlarmsEnabled
+    Properties:
+      DisplayName: Database Alarm Topic
+
+  PostgresCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: AlarmsEnabled
+    DependsOn: Postgres
+    Properties:
+      AlarmDescription: !Sub 'DB CPU utilization is over ${DatabaseAlarmMaxCpuPercent}% for ${DatabaseAlarmEvaluationPeriods} period(s) of ${DatabaseAlarmEvaluationPeriodSeconds} seconds'
+      TreatMissingData: notBreaching
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Unit: Percent
+      Statistic: Average
+      EvaluationPeriods: !Ref DatabaseAlarmEvaluationPeriods
+      Period: !Ref DatabaseAlarmEvaluationPeriodSeconds
+      Threshold: !Ref DatabaseAlarmMaxCpuPercent
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref Postgres
+      AlarmActions:
+        - !Ref DatabaseAlarmTopic
+
+  DatabaseFreeStorageSpaceAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: AlarmsEnabled
+    Properties:
+      AlarmDescription: !Sub 'DB free storage space is less than ${DatabaseAlarmMinFreeSpaceInBytes} for ${DatabaseAlarmEvaluationPeriods} period(s) of ${DatabaseAlarmEvaluationPeriodSeconds} seconds'
+      TreatMissingData: notBreaching
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Unit: Bytes
+      Statistic: Average
+      EvaluationPeriods: !Ref DatabaseAlarmEvaluationPeriods
+      Period: !Ref DatabaseAlarmEvaluationPeriodSeconds
+      Threshold: !Ref DatabaseAlarmMinFreeSpaceInBytes
+      ComparisonOperator: LessThanOrEqualToThreshold
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref Postgres
+      AlarmActions:
+        - !Ref DatabaseAlarmTopic
+    DependsOn: Postgres
+
+Outputs:
+  EndpointAddress:
+    Description: Connection endpoint of the database
+    Value: !GetAtt Postgres.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-EndpointAddress'
+  EndpointPort:
+    Description: Connection port of the database
+    Value: !GetAtt Postgres.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}-EndpointPort'
+  # DbInstanceIdentifier:
+  #   Description: The Database Instance Identifier
+  #   Value: !Ref Postgres
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-DbInstanceIdentifier'
+  DatabaseName:
+    Description: The Database Instance Identifier
+    Value: !Ref DatabaseName
+    Export:
+      Name: !Sub '${AWS::StackName}-DatabaseName'
+  MasterUserName:
+    Description: The master user name
+    Value: !Ref PostgresMasterUsername
+    Export:
+      Name: !Sub '${AWS::StackName}-MasterUserName'

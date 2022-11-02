@@ -1,0 +1,74 @@
+- ParameterKey: DBInstanceIdentifier
+  ParameterValue: "RDS-postgres"
+
+- ParameterKey: PubliclyAccessible
+  ParameterValue: "false"
+
+- ParameterKey: VpcId
+  ParameterValue: "vpc-49be512f"
+
+- ParameterKey: Subnet1
+  ParameterValue: "subnet-009b99937c6f5e8e4"
+
+- ParameterKey: Subnet2
+  ParameterValue: "subnet-793b031e"
+
+- ParameterKey: DatabaseName
+  ParameterValue: "postgres"
+
+- ParameterKey: StorageInGb
+  ParameterValue: "20"
+
+- ParameterKey: PostgresVersion
+  ParameterValue: "10.17"
+
+- ParameterKey: DbInstanceType
+  ParameterValue: "db.t2.medium"
+
+- ParameterKey: BackupRetentionInDays
+  ParameterValue: "1"
+
+- ParameterKey: PostgresMasterUsername
+  ParameterValue: "postgres"
+
+- ParameterKey: DatabaseAlarmMaxCpuPercent
+  ParameterValue: "80"
+
+- ParameterKey: DatabaseAlarmReadLatencyMaxSeconds
+  ParameterValue: "1"
+
+- ParameterKey: DatabaseAlarmWriteLatencyMaxSeconds
+  ParameterValue: "1"
+
+- ParameterKey: DatabaseAlarmMinFreeSpaceInBytes
+  ParameterValue: "524288000"
+
+- ParameterKey: DatabaseAlarmEvaluationPeriods
+  ParameterValue: "2"
+
+- ParameterKey: DatabaseAlarmEvaluationPeriodSeconds
+  ParameterValue: "300"
+
+- ParameterKey: EnhancedMonitoring
+  ParameterValue: "true"
+
+- ParameterKey: EnableAlarms
+  ParameterValue: "true"
+
+- ParameterKey: PreferredBackupWindow
+  ParameterValue: "09:54-10:24"
+
+- ParameterKey: PreferredMaintenanceWindow
+  ParameterValue: "sat:07:00-sat:07:30"
+
+- ParameterKey: DBParameterGroupName
+  ParameterValue: ""
+
+- ParameterKey: ExistingSecurityGroup
+  ParameterValue: "sg-0eccb42b821308973"
+
+- ParameterKey: Name
+  ParameterValue: "RDS-Postgres-resource"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"

@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This stack deploy ECS-ec2 blue Service
+Parameters:
+  codepipelinearn:
+    Type: String
+  codepipelinename:
+    Type: String
+  region:
+    Type: String
+  bucketname:
+    Type: String
+  artifactzip:
+    Type: String
+  latestimagetag:
+    Type: String
+  reponame:
+    Type: String
+  applicationname:
+    Type: String
+  deploymentgrpname:
+    Type: String
+  imagename:
+    Type: String
+  artifactbucket:
+    Type: String
+  # keyname:
+  #   Type: String
+  # valuename:
+  #   Type: String
+Resources:
+  AppPipeline: 
+    Type: AWS::CodePipeline::Pipeline 
+    Properties: 
+      RoleArn:
+        Ref: codepipelinearn
+      Name: 
+        Ref: codepipelinename
+      RestartExecutionOnUpdate: false
+      Stages: 
+        - 
+          Name: Source 
+          Actions: 
+            - 
+              Name: ECSBucketSource1
+              Region:
+                Ref: region
+              ActionTypeId: 
+                Category: Source 
+                Owner: AWS 
+                Version: 1 
+                Provider: S3 
+              OutputArtifacts: 
+                - 
+                  Name: SourceS3Output
+              Configuration: 
+                S3Bucket: jd-ecs-azure-bucket1
+                S3ObjectKey: artifact.zip
+                PollForSourceChanges: true
+              RunOrder: 1 
+            
+            -
+              Name: ECRSource
+              Region:
+                Ref: region
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: ECR
+                Version: 1
+              OutputArtifacts:
+                -
+                  Name: SourceECROutput
+              Configuration:
+                ImageTag:
+                  Ref: latestimagetag
+                RepositoryName: hello-world
+              RunOrder: 1
+
+        - 
+          Name: Deploy 
+          Actions: 
+            - 
+              Name: ECSBucketSource1
+              Region:
+                Ref: region 
+              InputArtifacts: 
+                -
+                  Name: SourceS3Output
+                - 
+                  Name: SourceECROutput
+              ActionTypeId: 
+                Category: Deploy 
+                Owner: AWS 
+                Version: 1 
+                Provider: CodeDeployToECS
+              Configuration: 
+                ApplicationName: 
+                  Ref: applicationname 
+                DeploymentGroupName: 
+                  Ref: deploymentgrpname
+                AppSpecTemplatePath: appspec.yaml
+                AppSpecTemplateArtifact: SourceS3Output
+                TaskDefinitionTemplatePath: taskdef.json
+                TaskDefinitionTemplateArtifact: SourceS3Output
+                Image1ArtifactName: SourceECROutput
+                Image1ContainerName: "IMAGE1_NAME" 
+              RunOrder: 1 
+        
+  
+      ArtifactStore: 
+        Type: S3 
+        Location:
+          Ref: artifactbucket
+
+      Tags:
+        - Key: Owner
+          Value: JD-SME-CD

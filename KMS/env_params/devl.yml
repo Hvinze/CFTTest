@@ -1,0 +1,24 @@
+- ParameterKey: myDescription
+  ParameterValue: An example symmetric encryption KMS Key
+
+- ParameterKey: Name
+  ParameterValue: KMS Resource
+
+- ParameterKey: component
+  ParameterValue: JD-SME
+
+- ParameterKey: Enabled
+  ParameterValue: "true"
+
+- ParameterKey: EnableKeyRotation
+  ParameterValue: "false"
+
+- ParameterKey: KeySpec
+  ParameterValue: SYMMETRIC_DEFAULT
+
+- ParameterKey: KeyUsage
+  ParameterValue: ENCRYPT_DECRYPT
+
+- ParameterKey: MultiRegion
+  ParameterValue: "false"
+

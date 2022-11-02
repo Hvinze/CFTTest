@@ -1,0 +1,18 @@
+#Add the following policy (for giving users permission to put objects) to the resource.yml file
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref BucketName
+      PolicyDocument: 
+       Version: '2012-10-17'
+       Statement:
+       - Sid: AddCannedAcl
+         Effect: Allow
+         Principal:
+           AWS:
+           - arn:aws:iam::847370586410:user/harshit.vinze
+         Action:
+         - s3:PutObject
+         - s3:PutObjectAcl
+
+         Resource: !GetAtt S3Bucket.Arn

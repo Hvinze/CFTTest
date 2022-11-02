@@ -1,0 +1,18 @@
+- ParameterKey: TopicName
+  ParameterValue: "ECR"
+
+- ParameterKey: EndPoint
+  ParameterValue: "aarav.bairagi@yash.com"
+
+- ParameterKey: FifoTopic
+  ParameterValue: "false"
+
+- ParameterKey: DisplayName
+  ParameterValue: "ECR Notification"
+
+- ParameterKey: Name
+  ParameterValue: "ECRSNS"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"
+

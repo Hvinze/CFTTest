@@ -1,0 +1,255 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ec2-LaunchTemplate-AutoScaling
+# ec2-launchtemplate-autoscaling.yaml
+Parameters:
+  VpcId:
+    Description: VPC ID
+    Type: AWS::EC2::VPC::Id
+
+  # StaticIPforSSH:
+  #   Description: Static IP for SSH access
+  #   Type: String
+  #   Default: 127.0.0.1/32
+
+  VpcEc2Subnet1:
+    Description: EC2 subnet 1(AZ-a)
+    Type: AWS::EC2::Subnet::Id
+
+  VpcEc2Subnet2:
+    Description: EC2 subnet 2(AZ-c)
+    Type: AWS::EC2::Subnet::Id
+
+  Ec2ImageId:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+
+  # LatestAmiId:
+  #   Type: String
+  #   Default: 'Ubuntu-20.04-64-bit-x86'
+  #   AllowedValues: [
+  #     Ubuntu-18.04-64-bit-x86,
+  #     Ubuntu-18.04-64-bit-Arm,      
+  #     Ubuntu-20.04-64-bit-x86,
+  #     Ubuntu-20.04-64-bit-Arm,      
+  #     Amazon-Linux-2-64-bit-x86,
+  #     Amazon-Linux-2-64-bit-Arm,
+  #     Microsoft-Windows-Server-2012-R2-Base,
+  #     Microsoft-Windows-Server-2019-Base,
+  #     Microsoft-Windows-Server-2022-Base,
+  #     Red-Hat-Enterprise-Linux-8-64-bit-x86,
+  #     Red-Hat-Enterprise-Linux-8-64-bit-Arm,
+  #     SUSE-Linux-Enterprise-Server-15-SP3-64-bit-x86,
+  #     SUSE-Linux-Enterprise-Server-15-SP3-64-bit-Arm
+  #   ]    
+
+  Ec2InstanceType:
+    Description: EC2 instance type
+    Type: String
+    #Default: t2.micro
+    AllowedValues:
+    - t2.nano
+    - t2.micro
+    - t2.small
+    - t2.medium
+    - t2.large
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c3.large
+    - c3.xlarge
+    - c3.2xlarge
+    - c3.4xlarge
+    - c3.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.    
+
+  Ec2InstanceTagName:
+    Description: EC2 Tag Name
+    Type: String
+    #Default: test-LaunchTemplate-ec2-20181115
+
+  Ec2InstanceComponentTagName:
+    Description: EC2 Component Tag Name
+    Type: String
+    #Default: LaunchTemplate-ec2-Component
+
+  Ec2AutoscaleMinSize:
+    Description: AutoScalingGroup MinSize
+    Type: String
+    #Default: '1'
+
+  Ec2AutoscaleMaxSize:
+    Description: AutoScalingGroup MaxSize
+    Type: String
+    #Default: '1'
+
+  Ec2AutoscaleDesiredCapacity:
+    Description: AutoScalingGroup DesiredCapacity
+    Type: String
+    #Default: '1'
+    
+  VolumeType:
+    Description: Volume type.
+    Type: String
+    #Default: gp2
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+
+  VolumeSize:
+    Description: Volume Size
+    Type: String
+    #Default: "10"
+
+  SecurityGroup:
+    Description: The security group ID of the cluster control plane.
+    Type: AWS::EC2::SecurityGroup::Id
+    #Default: ""     
+
+  DisableApiTermination:
+    Description: Termination Protection.
+    Type: String
+    #Default: false
+    AllowedValues:
+      - true
+      - false
+
+  Monitoring:
+    Description: Termination Protection.
+    Type: String
+    #Default: false
+    AllowedValues:
+      - true
+      - false 
+
+#   IPAddressvar:
+#     Description: It will attach the Elastic IP to the instance if True.
+#     Type: String
+#     Default: "52.7.120.177"
+
+# Conditions: 
+#     IPAddressvarCondition: !Not [!Equals [!Ref IPAddressvar, '']]  
+
+# Mappings:
+#   LatestAmiId:
+#     "Ubuntu-18.04-64-bit-x86":
+#       value: "ami-0e472ba40eb589f49"
+#     "Ubuntu-18.04-64-bit-Arm":
+#       value: "ami-0a940cb939351ccca"
+#     "Ubuntu-20.04-64-bit-x86":
+#       value: "ami-04505e74c0741db8d"
+#     "Ubuntu-20.04-64-bit-Arm":
+#       value: "ami-0b49a4a6e8e22fa16"
+#     "Amazon-Linux-2-64-bit-x86":
+#       value: "ami-0c293f3f676ec4f90"
+#     "Amazon-Linux-2-64-bit-Arm":
+#       value: "ami-005d843eadb96ed7f"
+#     "Microsoft-Windows-Server-2012-R2-Base":
+#       value: "ami-0674699ffaa068ac4"      
+#     "Microsoft-Windows-Server-2019-Base":
+#       value: "ami-0c19f80dba70861db"
+#     "Microsoft-Windows-Server-2022-Base":
+#       value: "ami-02c4808b9f729b235"
+#     "Red-Hat-Enterprise-Linux-8-64-bit-x86":
+#       value: "ami-0b0af3577fe5e3532"
+#     "Red-Hat-Enterprise-Linux-8-64-bit-Arm":
+#       value: "ami-01fc429821bf1f4b4"      
+#     "SUSE-Linux-Enterprise-Server-15-SP3-64-bit-x86":
+#       value: "ami-08895422b5f3aa64a"
+#     "SUSE-Linux-Enterprise-Server-15-SP3-64-bit-Arm":
+#       value: "ami-08f182b25f271ef79" 
+
+Resources:
+  Ec2InstanceLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        TagSpecifications:
+        - ResourceType: instance
+          Tags:
+          - Key: Name
+            Value: !Ref 'Ec2InstanceTagName'
+          - Key: component
+            Value: !Ref 'Ec2InstanceComponentTagName'            
+        - ResourceType: volume
+          Tags:
+          - Key: Name
+            Value: !Ref 'Ec2InstanceTagName'
+          - Key: component
+            Value: !Ref 'Ec2InstanceComponentTagName'   
+        ImageId: !Ref 'Ec2ImageId'
+        # ImageId: !FindInMap
+        #   - LatestAmiId
+        #   - !Ref LatestAmiId
+        #   - value          
+        InstanceType: !Ref 'Ec2InstanceType'
+        BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: !Ref VolumeType
+            DeleteOnTermination: true
+            Encrypted: true
+        DisableApiTermination: !Ref DisableApiTermination
+        Monitoring: 
+          Enabled: !Ref Monitoring
+        # SecurityGroupIds:
+        # - !Ref 'SecurityGroup'        
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            AssociatePublicIpAddress: false
+            Groups:
+              - !Ref 'SecurityGroup'
+            DeleteOnTermination: true
+        # UserData:
+        #   Fn::Base64: !Sub |
+        #     Fn::Join:
+        #       Fn::If:
+        #       - IPAddressvarCondition
+        #       - [IPAddress=, !Ref 'IPAddressvar']   
+        #       - Ref: AWS::NoValue                           
+
+
+  # IPAssoc:
+  #   Type: AWS::EC2::EIPAssociation
+  #   Condition : IPAddressvarCondition
+  #   Properties:
+  #     InstanceId: !Ref 'Ec2InstanceLaunchTemplate'
+  #     EIP: !Ref 'IPAddressvar'
+
+  Ec2InstanceAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+      - !Ref 'VpcEc2Subnet1'
+      - !Ref 'VpcEc2Subnet2'
+      LaunchTemplate:
+        LaunchTemplateId: !Ref 'Ec2InstanceLaunchTemplate'
+        Version: !GetAtt 'Ec2InstanceLaunchTemplate.LatestVersionNumber'
+      MinSize: !Ref 'Ec2AutoscaleMinSize'
+      MaxSize: !Ref 'Ec2AutoscaleMaxSize'
+      DesiredCapacity: !Ref 'Ec2AutoscaleDesiredCapacity'
+
+  # Ec2SecurityGroupSSH:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     VpcId: !Ref 'VpcId'
+  #     GroupDescription: allow SSH via static IP
+  #     SecurityGroupIngress:
+  #     - IpProtocol: tcp
+  #       FromPort: 22
+  #       ToPort: 22
+  #       CidrIp: !Ref 'StaticIPforSSH'

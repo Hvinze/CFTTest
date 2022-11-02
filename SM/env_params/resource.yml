@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for creating secrets in secret manager
+
+Parameters:
+  secretname:
+    Type: String
+    Description: The is tha name of secret manager 
+  secretvalue:
+    Type: String
+    Description: The is tha key value for secret in secret manager 
+  mystringkey:
+    Type: String
+    Description: The is tha name of key that is being generated at time of secret creation 
+  eliminate_characters:
+    Type: String 
+    Decsription: These are characters that should be eleminated in secret
+
+Resources:
+  DBMasterSecret:
+    Type: AWS::SecretsManager::Secret
+
+    DeletetionPolicy: Retain
+    
+    Properties:
+      Name: !Ref secretname 
+      GenerateSecretString:
+        SecretStringTemplate: !Ref secretvalue
+        GenerateStringKey: !Ref mystringkey
+        ExcludeCharacters: !Ref eleminate_characters
+        PasswordLength: 30
+
+      Tags:
+        -
+          Key: AppName
+          Value: Appa

@@ -1,0 +1,11 @@
+- ParameterKey: Runtime
+  ParameterValue: "python3.7"
+
+- ParameterKey: Handler
+  ParameterValue: "index.lambda_handler"
+
+- ParameterKey: Name
+  ParameterValue: "LambdFn22822"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"

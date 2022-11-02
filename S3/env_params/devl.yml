@@ -1,0 +1,17 @@
+- ParameterKey: BucketName
+  ParameterValue: "deletethisbkt"
+
+- ParameterKey: AccessControl
+  ParameterValue: "Private"
+
+- ParameterKey: BucketVersioning
+  ParameterValue: "Enabled"
+
+- ParameterKey: LifecycleStatus
+  ParameterValue: "Enabled"
+
+- ParameterKey: Name
+  ParameterValue: "S3Resource"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"

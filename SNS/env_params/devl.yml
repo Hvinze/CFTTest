@@ -1,0 +1,15 @@
+- ParameterKey: TopicName
+  ParameterValue: "AppModernizationSNS"
+
+- ParameterKey: EndPoint
+  ParameterValue: "aarav.bairagi@yash.com"
+
+- ParameterKey: DisplayName
+  ParameterValue: "AppModernizationSNS Notification"
+
+- ParameterKey: Name
+  ParameterValue: "AppModernizationSNS"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"
+

@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create EFS system and Mount Targets for the defined VPC"
+
+Parameters:
+  VPC:
+    Type: String
+    Description: The VPC identity
+
+  SubnetID1:
+    Type: String
+    Description: The subnet where to launch the service
+
+  SubnetID2:
+    Type: String
+    Description: The subnet where to Launch the service
+
+  EFSSecurityGroup:
+    Type: String
+    Description: Security group for mount target
+
+  BackupPolicy:
+    Type: String
+    Description: Use the BackupPolicy to turn automatic backups on or off for the file system
+    AllowedValues:
+      - DISABLED
+      - DISABLING
+      - ENABLED
+      - ENABLING
+
+  Encrypted:
+    Type: String
+    Description: A String value that, if true, creates an encrypted file system
+
+  TransitionToIA:
+    Type: String
+    Description: Describes the period of time that a file is not accessed, after which it transitions to IA storage
+    AllowedValues:
+      - AFTER_14_DAYS
+      - AFTER_30_DAYS
+      - AFTER_60_DAYS
+      - AFTER_7_DAYS
+      - AFTER_90_DAYS
+
+  TransitionToPrimaryStorageClass:
+    Type: String
+    Description: Describes when to transition a file from IA storage to primary storage
+    AllowedValues:
+      - AFTER_1_ACCESS
+
+  PerformanceMode:
+    Type: String
+    Description: The performance mode of the file system
+    AllowedValues:
+      - generalPurpose
+      - maxIO
+
+  ThroughputMode:
+    Type: String
+    Description: Specifies the throughput mode for the file system, either bursting or provisioned. If you set ThroughputMode to provisioned, you must also set a value for ProvisionedThroughputInMibps
+    AllowedValues:
+      - bursting
+      - provisioned
+
+  ProvisionedThroughputInMibps:
+    Type: String
+    Description: The throughput, measured in MiB/s, that you want to provision for a file system that you're creating
+
+  Name:
+    Type: String
+    Description: Name tag in file system
+
+  component:
+    Type: String
+    Description: Component tag in file system
+
+Resources:
+  EFSFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: !Ref BackupPolicy
+      Encrypted: !Ref Encrypted
+
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+               - "elasticfilesystem:ClientRootAccess"
+               - "elasticfilesystem:ClientWrite"
+               - "elasticfilesystem:ClientMount"
+            Principal:
+              AWS: "*"
+            Condition:
+             Bool:
+                elasticfilesystem:AccessedViaMountTarget: 'true'
+
+      LifecyclePolicies:
+        - TransitionToIA: !Ref TransitionToIA
+        - TransitionToPrimaryStorageClass: !Ref TransitionToPrimaryStorageClass
+
+      PerformanceMode: !Ref PerformanceMode
+      ThroughputMode: !Ref ThroughputMode
+      ProvisionedThroughputInMibps: !Ref ProvisionedThroughputInMibps
+
+      FileSystemTags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+
+  EFSAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      AccessPointTags:
+        - Key: Name
+          Value: !Ref Name
+        - Key: component
+          Value: !Ref component
+      FileSystemId: !Ref EFSFileSystem
+      PosixUser:
+        Gid: "1002"
+        Uid: "1002"
+
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1002"
+          OwnerUid: "1002"
+          Permissions: "755"
+
+        Path: "/"
+
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref SubnetID1
+
+  MountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSFileSystem
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+      SubnetId: !Ref SubnetID2
+
+Outputs:
+  EFS:
+    Description: The created EFS
+    Value: !Ref EFSFileSystem
+
+  EFSMountTarget1:
+    Description: The EFS MountTarget1
+    Value: !Ref MountTarget1
+
+  EFSMountTarget2:
+    Description: The EFS MountTarget2
+    Value: !Ref MountTarget2

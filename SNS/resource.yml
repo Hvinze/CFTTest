@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to Create an SNS Topic and Subscriptions
+
+Parameters:
+
+  TopicName:
+    Type: String
+    Description: The name of the topic you want to create
+
+  EndPoint:
+    Type: String
+    Description: The endpoint that receives notifications from the Amazon SNS topic
+
+  Name:
+    Type: String
+    Description: Tag used for naming resource
+
+  component:
+    Type: String
+    Description: Tag used for billing and tracking purposes
+  
+  DisplayName:
+    Type: String
+    Description: The display name to use for an Amazon SNS topic with SMS subscriptions
+
+  #FilterPolicy:
+  #  Type: json
+  #  Description: The filter policy JSON assigned to the subscription
+
+Resources:
+
+  MySNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Endpoint: !Ref EndPoint
+      #FilterPolicy: !Ref FilterPolicy
+      Protocol: "email"
+      TopicArn: !Ref MySNSTopic
+
+  MySNSTopic: 
+    Type: AWS::SNS::Topic
+    Properties: 
+      Subscription: 
+        - Endpoint: !Ref EndPoint
+          Protocol: "email"
+      DisplayName: !Ref DisplayName
+
+      Tags: 
+        - Key: Name
+          Value: !Ref Name
+        - Key: Component
+          Value: !Ref component
+      TopicName: !Ref TopicName     
+
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument: 
+        Id: SNSTopicPolicy
+        Version: '2012-10-17'
+        Statement:
+        - Sid : SNSTopicPolicy
+          Action: 
+          - sns:Subscribe
+          - sns:Publish
+          Effect: Allow
+          Principal:
+            AWS: 'arn:aws:iam::847370586410:role/JD-AppModernization-SME-Role'
+          Resource: !Ref MySNSTopic            
+      Topics: 
+      - !Ref MySNSTopic      

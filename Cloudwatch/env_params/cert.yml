@@ -1,0 +1,29 @@
+- ParameterKey: AlarmName
+  ParameterValue: "AppModernizationEC2Alarm"
+
+- ParameterKey: ComparisonOperator
+  ParameterValue: "GreaterThanThreshold"
+
+- ParameterKey: MetricName
+  ParameterValue: "CPUUtilization"
+
+- ParameterKey: Namespace
+  ParameterValue: "AWS/EC2"
+
+- ParameterKey: Statistic
+  ParameterValue: "Average"
+
+- ParameterKey: Period
+  ParameterValue: "60"
+
+- ParameterKey: EvaluationPeriods
+  ParameterValue: "1"
+
+- ParameterKey: Threshold
+  ParameterValue: "20"
+
+- ParameterKey: SNSArn
+  ParameterValue: "arn:aws:sns:us-west-2:847370586410:AppModernizationSNS"
+
+- ParameterKey: InstanceId
+  ParameterValue: "i-05259062a3c2f5cca"

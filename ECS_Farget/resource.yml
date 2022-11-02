@@ -1,0 +1,509 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This stack deploy ECS fargate Service
+
+Parameters:
+
+  #security group
+
+  vpcId:
+    Type: String
+    Description: Name of the VPC
+
+  #cluster
+
+  ClusterName:
+    Type: String
+    Description: Name of the cluster
+  Name1:
+    Type: String
+    Description: Name of the ECS resource1
+  Name2:
+    Type: String
+    Description: Name of the ECS resource2
+  Name3:
+    Type: String
+    Description: Name of the ECS resource3
+  component:
+    Type: String
+    Description: Tag used for cost tracking and billing
+  
+  #task definition
+
+  ContainerDefinitionsMountPointsContainerPath:
+    Type: String
+    Description: The path on the container to mount the host volume at.
+  ContainerDefinitionsMountPointsSourceVolume:
+    Type: String
+    Description: The name of the volume to mount
+
+  ContainerDefinitionsImage:
+    Type: String
+    Description: The image used to start a container
+
+  LogConfigurationLogDriver:
+    Type: String
+    Description: The log driver to use for the container.  
+  LogConfigurationOptionsawslogsregion:
+    Type: String
+    Description: The log configuration specification for the container
+  LogConfigurationOptionsawslogsstreamprefix:
+    Type: String
+    Description: The log configuration specification for the container
+
+  TaskdefContainerName:
+    Type: String
+    Description: Name of the container mentioned in task definition
+
+  ContainerDefinitionsPortMappingsContainerPort:
+    Type: String
+    Description: The port number on the container that's bound to the user-specified or automatically assigned host port.
+  ContainerDefinitionsPortMappingsProtocol:
+    Type: String
+    Description: The protocol used for the port mapping.
+  ContainerDefinitionsPortMappingsHostPort:
+    Type: String
+    Description: The port number on the container instance to reserve for your container.
+
+  Cpu:
+    Type: String
+    Description: The number of cpu units reserved for the container.
+  ExecutionRoleArn:
+    Type: String
+    Description: The Amazon Resource Name (ARN) of the task execution role that grants the Amazon ECS container agent permission to make AWS API calls on your behalf.
+  Family:
+    Type: String
+    Description: The name of a family that this task definition is registered to.
+  Memory:
+    Type: String
+    Description: The amount (in MiB) of memory used by the task.
+  NetworkMode:
+    Type: String
+    Description: The Docker networking mode to use for the containers in the task.
+  RequiresCompatibilities:
+    Type: String
+    Description: The task launch types the task definition was validated against.
+  TaskRoleArn:
+    Type: String
+    Description: The short name or full Amazon Resource Name (ARN) of the AWS Identity and Access Management role that grants containers in the task permission to call AWS APIs on your behalf.
+  
+  FilesystemId:
+    Type: String
+    Description: The Amazon EFS file system ID to use.
+  
+  VolumesEFSVolumeConfigurationRootDirectory:
+    Type: String
+    Description: The directory within the Amazon EFS file system to mount as the root directory inside the host.
+
+  # VolumesName:
+  #   Type: String
+  #   Description: Creates a multi-Region primary key
+  # VolumesEFSVolumeConfigurationTransitEncryption:
+  #   Type: String
+  #   Description: Creates a multi-Region primary key
+  # VolumesEFSVolumeConfigurationAuthorizationConfigIAM:
+  #   Type: String
+  #   Description: Creates a multi-Region primary key
+  # DeploymentConfigurationMaximumPercent:
+  #   Type: String
+  #   Description: Name of the ECS resource1
+  # DeploymentConfigurationMinimumHealthyPercent:
+  #   Type: String
+  #   Description: Name of the ECS resource1
+  # DeploymentControllerType:
+  #   Type: String
+  #   Description: Name of the ECS resource1
+  # HealthCheckGracePeriodSeconds:
+  #   Type: String
+  #   Description: Name of the ECS resource1
+
+
+  #ECS Service
+
+  EnableECSManagedTags:
+    Type: String
+    Description: Specifies whether to turn on Amazon ECS managed tags for the tasks within the service.
+  DeploymentControllerType:
+    Type: String
+    Description: The deployment controller type to use.
+  LaunchType:
+    Type: String
+    Description: The launch type on which to run your service.
+  DesiredCount:
+    Type: String
+    Description: The number of instantiations of the specified task definition to place and keep running on your cluster.
+  LoadBalancersContainerName:
+    Type: String
+    Description: The name of the container (as it appears in a container definition) to associate with the load balancer.
+  LoadBalancersContainerPort:
+    Type: String
+    Description: The port on the container to associate with the load balancer.
+
+  NetworkConfigurationAwsvpcConfigurationAssignPublicIp:
+    Type: String
+    Description: Whether the task's elastic network interface receives a public IP address.
+  NetworkConfigurationAwsvpcConfigurationSG1:
+    Type: String
+    Description: The IDs of the security groups associated with the task or service.
+  NetworkConfigurationAwsvpcConfigurationSG2:
+    Type: String
+    Description: The IDs of the security groups associated with the task or service.
+  NetworkConfigurationAwsvpcConfigurationSubnet1:
+    Type: String
+    Description: The IDs of the subnets associated with the task or service. 
+  NetworkConfigurationAwsvpcConfigurationSubnet2:
+    Type: String
+    Description: The IDs of the subnets associated with the task or service. 
+
+  ServiceName:
+    Type: String
+    Description: The name of your service.
+
+  ELBListenerARN:
+    Type: String
+    Description: ELBListenerARN
+  ELBTestListenerARN:
+    Type: String
+    Description: ELBListenerARN
+  ELBTargetGroupTG1Name:
+    Type: String
+    Description: Name of the ELBTargetGroup1
+  ELBTargetGroupTG2Name:
+    Type: String
+    Description: Name of the ELBTargetGroup2
+
+  #Load Balancer
+ 
+  LoadBalancerScheme:
+    Type: String
+    Description: Scheme used by the load balancer
+  PublicSubnet0:
+    Type: String
+    Description: Public subnet0 id
+  PublicSubnet1:
+    Type: String
+    Description: Public subnet1 id
+  PrivateSubnet0:
+    Type: String
+    Description: Private subnet0 id
+  PrivateSubnet1:
+    Type: String
+    Description: Private subnet1 id
+  LoadBalancerType:
+    Type: String
+    Description: type of the loadbalancer
+
+  #Target Group
+
+  TargetGroupHealthCheckEnabled:
+    Type: String
+    Description: Indicates whether health checks are enabled.
+  TargetGroupHealthCheckIntervalSeconds:
+    Type: String
+    Description: The approximate amount of time, in seconds, between health checks of an individual target.
+  TargetGroupHealthCheckPath:
+    Type: String
+    Description: The destination for health checks on the targets.
+  TargetGroupHealthCheckProtocol:
+    Type: String
+    Description: The protocol the load balancer uses when performing health checks on targets.
+  TargetGroupHealthCheckTimeoutSeconds:
+    Type: String
+    Description: The amount of time, in seconds, during which no response from a target means a failed health check.
+  TargetGroup1Name:
+    Type: String
+    Description: Name of the target group1
+  TargetGroup2Name:
+    Type: String
+    Description: Name of the target group1
+  TargetGroup1Port:
+    Type: String
+    Description: target group1 port
+  TargetGroup2Port:
+    Type: String
+    Description: target group2 port
+  TargetGroupProtocol:
+    Type: String
+    Description: target group protocol
+  TargetGroupTargetType:
+    Type: String
+    Description: type of the target group
+  TargetGroupUnhealthyThresholdCount:
+    Type: String
+    Description: The number of consecutive health check failures required before considering a target unhealthy.
+  TargetGroupHealthyThresholdCount:
+    Type: String
+    Description: The number of consecutive health checks successes required before considering an unhealthy target healthy. 
+
+  #Listener
+
+  ListenersPort1:
+    Type: String
+    Description: Listener port primary
+
+  ListenersPort2:
+    Type: String
+    Description: Listener port for testing
+
+  ListenersProtocol:
+    Type: String
+    Description: Listener Protocol
+  
+Resources:
+  #------------------------------------------
+  # Internet-facing ALB Security Group
+  #------------------------------------------
+  EcsSecurityGroup1:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: External ALB SecurityGroup to connect ALB to ECS Service
+      VpcId: !Ref vpcId
+
+  #------------------------------------------
+  # ECS Security Group for APP
+  #------------------------------------------
+
+  EcsSecurityGroup2:
+    Type: 'AWS::EC2::SecurityGroup'
+    DependsOn: EcsSecurityGroup1
+    Properties:
+      GroupDescription: ECS SecurityGroup to allow traffic from empty ALB SecurityGroup
+      VpcId: !Ref vpcId
+      
+  EcsSecurityGroupSSHinbound:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref EcsSecurityGroup2
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !Ref EcsSecurityGroup1
+
+  #------------------------------------------
+  # ECS Security Group for APP Testing for Dev
+  #------------------------------------------
+
+  EcsSecurityGroup3:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: External ALB SecurityGroup to Private Subnet access for Dev Team on 9090
+      VpcId: !Ref vpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 9090
+          ToPort: 9090
+          CidrIp: 0.0.0.0/0
+
+
+  'ECSCluster':
+    Type: AWS::ECS::Cluster 
+    Properties:
+      ClusterName: !Ref ClusterName
+      Tags:
+      - Key: component
+        Value: !Ref component
+      - Key: Name1
+        Value: !Ref Name1
+
+
+  'ECSTaskDefinition':
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+
+      ContainerDefinitions:
+        - Essential: true
+          MountPoints:
+          - ContainerPath: !Ref ContainerDefinitionsMountPointsContainerPath
+            SourceVolume: !Ref ContainerDefinitionsMountPointsSourceVolume
+          Image: !Ref ContainerDefinitionsImage
+          
+          LogConfiguration:
+            LogDriver: !Ref LogConfigurationLogDriver
+            Options:
+              awslogs-group: 'ecs-stack-devl-LogsLogGroupName'
+              awslogs-region: !Ref LogConfigurationOptionsawslogsregion
+              awslogs-stream-prefix: !Ref LogConfigurationOptionsawslogsstreamprefix
+          Name: !Ref TaskdefContainerName
+          PortMappings:
+          - ContainerPort: !Ref ContainerDefinitionsPortMappingsContainerPort
+            Protocol: !Ref ContainerDefinitionsPortMappingsProtocol
+            HostPort: !Ref ContainerDefinitionsPortMappingsHostPort
+          Environment:
+          - Name: JAVA_OPTS
+            Value: 'JAVA_OPTS'
+
+      Cpu: !Ref Cpu
+      ExecutionRoleArn: !Ref ExecutionRoleArn
+      Family: !Ref Family
+      Memory: !Ref Memory
+      NetworkMode: !Ref NetworkMode
+      RequiresCompatibilities:
+      - !Ref RequiresCompatibilities
+      Tags:
+      - Key: component
+        Value: !Ref component
+      - Key: Name2
+        Value: !Ref Name2
+      TaskRoleArn: !Ref TaskRoleArn
+      Volumes:
+      - Name: shared-efs-volume
+        EFSVolumeConfiguration:
+          FilesystemId: !Ref FilesystemId
+          RootDirectory: !Ref VolumesEFSVolumeConfigurationRootDirectory
+                      
+            
+  'ECSService':
+    Type: AWS::ECS::Service
+    DependsOn: MyECSListeners
+    Properties:
+      Cluster:
+        Ref: 'ECSCluster'
+      DeploymentController:
+        Type: !Ref DeploymentControllerType
+      
+      EnableECSManagedTags: false
+      LaunchType: !Ref LaunchType
+      DesiredCount: !Ref DesiredCount  # For testing purpose
+      
+      LoadBalancers:
+      - ContainerName: !Ref LoadBalancersContainerName
+        ContainerPort: !Ref LoadBalancersContainerPort
+        TargetGroupArn: !Ref 'MyECSTargetGroup'
+
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: !Ref NetworkConfigurationAwsvpcConfigurationAssignPublicIp
+          SecurityGroups: 
+          - !Ref EcsSecurityGroup2
+          # - !Ref NetworkConfigurationAwsvpcConfigurationSG2
+          Subnets:
+          - !Ref NetworkConfigurationAwsvpcConfigurationSubnet1
+          - !Ref NetworkConfigurationAwsvpcConfigurationSubnet2
+      ServiceName: !Ref ServiceName
+      Tags:
+      - Key: component
+        Value: !Ref component
+      - Key: Name3
+        Value: !Ref Name3
+      TaskDefinition:
+        Ref: 'ECSTaskDefinition'
+
+  #------------------------------------------
+  # ECS External LoadBalancer for APP
+  #------------------------------------------ 
+
+  'MyECSLoadBalancer':
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: EcsSecurityGroup3
+    DependsOn: EcsSecurityGroup1
+    Properties: 
+      Name: ECSALB
+      Scheme: !Ref LoadBalancerScheme
+      SecurityGroups: 
+        - !Ref EcsSecurityGroup1
+        - !Ref EcsSecurityGroup3
+      Subnets: 
+        - !Ref PublicSubnet0
+        - !Ref PublicSubnet1
+        - !Ref PrivateSubnet0
+        - !Ref PrivateSubnet1
+      Type: !Ref LoadBalancerType
+
+  #------------------------------------------
+  # LoadBalancer Target Groups
+  #------------------------------------------
+  # Internal Target Group
+  
+  'MyECSTargetGroup':
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: !Ref TargetGroupHealthCheckEnabled
+      HealthCheckIntervalSeconds: !Ref TargetGroupHealthCheckIntervalSeconds
+      HealthCheckPath: !Ref TargetGroupHealthCheckPath
+      HealthCheckProtocol: !Ref TargetGroupHealthCheckProtocol
+      HealthCheckTimeoutSeconds: !Ref TargetGroupHealthCheckTimeoutSeconds
+      Name: !Ref TargetGroup1Name
+      Port: !Ref TargetGroup1Port
+      Protocol: !Ref TargetGroupProtocol
+      TargetType: !Ref TargetGroupTargetType
+      UnhealthyThresholdCount: !Ref TargetGroupUnhealthyThresholdCount
+      HealthyThresholdCount: !Ref TargetGroupHealthyThresholdCount
+      VpcId: !Ref vpcId
+
+  # Internal Target Group for TESTING
+
+  'MyECSTargetGroup2':
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: !Ref TargetGroupHealthCheckEnabled
+      HealthCheckIntervalSeconds: !Ref TargetGroupHealthCheckIntervalSeconds
+      HealthCheckPath: !Ref TargetGroupHealthCheckPath
+      HealthCheckProtocol: !Ref TargetGroupHealthCheckProtocol
+      HealthCheckTimeoutSeconds: !Ref TargetGroupHealthCheckTimeoutSeconds
+      Name: !Ref TargetGroup2Name
+      Port: !Ref TargetGroup2Port
+      Protocol: !Ref TargetGroupProtocol
+      TargetType: !Ref TargetGroupTargetType
+      UnhealthyThresholdCount: !Ref TargetGroupUnhealthyThresholdCount
+      HealthyThresholdCount: !Ref TargetGroupHealthyThresholdCount
+      VpcId: !Ref vpcId
+
+  #------------------------------------------
+  # ALB Listener - External 
+  #------------------------------------------ 
+
+  'MyECSListeners':
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - Type: "forward"
+          TargetGroupArn: !Ref MyECSTargetGroup
+      LoadBalancerArn: 
+        Ref: "MyECSLoadBalancer"
+      Port: !Ref ListenersPort1
+      Protocol: !Ref ListenersProtocol     
+
+  'MyECSListeners2':
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - Type: "forward"
+          TargetGroupArn: !Ref MyECSTargetGroup2
+      LoadBalancerArn: 
+        Ref: "MyECSLoadBalancer"
+      Port: !Ref ListenersPort2
+      Protocol: !Ref ListenersProtocol
+
+
+  'ECSScalableTarget':
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: "5"
+      MinCapacity: "2"  
+      RoleARN: 
+        Fn::Sub: "arn:aws:iam::847370586410:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"
+      ServiceNamespace: ecs
+      ScalableDimension: 'ecs:service:DesiredCount'
+      ResourceId: !Join 
+        - /
+        - - service
+          - !Ref ECSCluster
+          - !GetAtt ECSService.Name
+  
+  'ServiceScalingPolicyALB':
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: alb-requests-per-target-per-minute
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ECSScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: "75"
+        ScaleInCooldown: "60"
+        ScaleOutCooldown: "30"
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join 
+            - '/' 
+            - - !GetAtt MyECSLoadBalancer.LoadBalancerFullName
+              - !GetAtt MyECSTargetGroup.TargetGroupFullName
+
+ 

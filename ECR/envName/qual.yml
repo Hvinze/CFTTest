@@ -1,0 +1,14 @@
+- ParameterKey: RepositoryName
+  ParameterValue: "app_modernization_ecr"
+
+- ParameterKey: ImageTagMutability
+  ParameterValue: MUTABLE
+
+- ParameterKey: ScanOnPush
+  ParameterValue: "false"
+
+- ParameterKey: Name
+  ParameterValue: "app_modernization_ecr"
+
+- ParameterKey: component
+  ParameterValue: "JD-SME"
