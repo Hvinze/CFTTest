@@ -64,7 +64,7 @@ jobs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws:iam::847370586410:role/github-actions-instance-role
+        role-to-assume: arn:aws:iam::847370586410:role/github-actions-sts-role
         role-session-name: GitHubActions
         role-duration-seconds: 1200
         role-skip-session-tagging: true
